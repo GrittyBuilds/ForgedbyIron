@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FitTrack">
+<meta name="apple-mobile-web-app-title" content="Forged by Iron">
 <meta name="theme-color" content="#0e1013">
-<title>FitTrack</title>
+<title>Forged by Iron</title>
 <style>
   :root{
     --bg:#0e1013; --card:#181b20; --card2:#1f232a; --line:#2a2f37;
@@ -266,7 +266,7 @@
 <div id="app">
   <div class="top">
     <div class="h">
-      <div class="k" id="topk">FitTrack</div>
+      <div class="k" id="topk">Forged by Iron</div>
       <h1 id="toph">Today</h1>
       <div class="d" id="topd"></div>
     </div>
@@ -690,7 +690,7 @@ function viewTrends(){
   return out;
 }
 function viewProgram(){
-  let out=`<div class="card"><div class="kicker" style="color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700">FitTrack · Recomp</div>
+  let out=`<div class="card"><div class="kicker" style="color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Forged by Iron · Recomp</div>
     <h2 style="margin:6px 0 4px;font-size:18px">Your Program</h2>
     <div style="font-size:13px;color:var(--mut)">A 5-day split built to bring up delts &amp; arms while holding your V-taper, paired with a gluten-free, gut-friendly, budget meal plan.</div></div>`;
   out+=`<div class="card"><h2>Daily Targets</h2><div class="tiles">
@@ -871,7 +871,7 @@ function ghHeaders(){ return {'Authorization':'Bearer '+sync.token,'Accept':'app
 function syncPayload(){ const d=JSON.parse(JSON.stringify(data)); Object.keys(d.dates||{}).forEach(k=>{ if(d.dates[k]) delete d.dates[k].photos; }); return JSON.stringify(d); }
 async function ghUser(){ const r=await fetch(GH+'/user',{headers:ghHeaders()}); if(!r.ok) throw 0; return (await r.json()).login; }
 async function ghFind(){ const r=await fetch(GH+'/gists?per_page=100',{headers:ghHeaders()}); if(!r.ok) throw 0; const a=await r.json(); const g=(a||[]).find(x=>x.files&&x.files[GIST_FILE]); return g?g.id:''; }
-async function ghCreate(){ const r=await fetch(GH+'/gists',{method:'POST',headers:ghHeaders(),body:JSON.stringify({description:'FitTrack data (private)',public:false,files:{[GIST_FILE]:{content:syncPayload()}}})}); if(!r.ok) throw 0; return (await r.json()).id; }
+async function ghCreate(){ const r=await fetch(GH+'/gists',{method:'POST',headers:ghHeaders(),body:JSON.stringify({description:'Forged by Iron data (private)',public:false,files:{[GIST_FILE]:{content:syncPayload()}}})}); if(!r.ok) throw 0; return (await r.json()).id; }
 async function ghPush(){ if(!sync.gistId) return; const r=await fetch(GH+'/gists/'+sync.gistId,{method:'PATCH',headers:ghHeaders(),body:JSON.stringify({files:{[GIST_FILE]:{content:syncPayload()}}})}); if(!r.ok) throw 0; }
 async function ghPull(){ if(!sync.gistId) return null; const r=await fetch(GH+'/gists/'+sync.gistId,{headers:ghHeaders()}); if(!r.ok) throw 0; const j=await r.json(); const f=j.files&&j.files[GIST_FILE]; if(!f) return null; let c=f.content; if(f.truncated&&f.raw_url){ const rr=await fetch(f.raw_url); c=await rr.text(); } try{ return JSON.parse(c); }catch(e){ return null; } }
 function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
@@ -991,7 +991,7 @@ document.getElementById('importInput').addEventListener('change', function(){
 });
 function exportData(){ const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
   const u=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=u; a.download='fittrack-backup.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); closeSheet(); }
+  a.href=u; a.download='forged-by-iron-backup.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); closeSheet(); }
 
 /* ---------------- UTIL ---------------- */
 function val(id){ const el=document.getElementById(id); return el?el.value:''; }
@@ -1012,7 +1012,7 @@ function exportCSV(){
   L.push(''); L.push('PERSONAL RECORDS'); L.push(csvRow(['Exercise','Best','Est 1RM ('+data.unit+')','Date']));
   getPRs().forEach(p=>{ L.push(csvRow([p.ex,p.type==='w'?(trimN(p.w)+' x '+p.r):(p.r+' reps'),p.type==='w'?trimN(Math.round(p.e)):'',p.date])); });
   const blob=new Blob([L.join('\n')],{type:'text/csv'}); const u=URL.createObjectURL(blob); const a=document.createElement('a');
-  a.href=u; a.download='fittrack-export.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); closeSheet();
+  a.href=u; a.download='forged-by-iron-export.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); closeSheet();
 }
 
 document.getElementById('lockPad').addEventListener('click', e=>{ const b=e.target.closest('[data-lk]'); if(!b) return; const k=b.dataset.lk; if(k==='del') lockDel(); else lockDigit(k); });
