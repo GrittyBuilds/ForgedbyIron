@@ -399,8 +399,8 @@ function persistLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }
 function touch(k){ k=k||todayKey(); const s=dstore(k); s._u=nowMs(); }
 function touchSettings(){ data.updatedAt=nowMs(); }
 /* ---------------- STATE ---------------- */
-const state = { tab:'today', liftDay: todayDayIndex()>=0? todayDayIndex():0, statsView:'week' };
-function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; }
+const state = { tab:'today', liftDay: (data.rotationPos||0), statsView:'week' };
+function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; }
   if(!data.foods){ data.foods=[
     {id:'f_pre',name:'Pre-Workout (100g grapes)',p:1,c:18,f:0},
     {id:'f_cor',name:'Cream of Rice + Whey',p:46,c:86,f:5},
@@ -421,7 +421,7 @@ function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks
   if(ch) save(); }
 function blockWeeks(){ const s=data.blockStart||todayKey(); const a=new Date(s+'T00:00'),b=new Date(todayKey()+'T00:00'); return Math.max(0,Math.floor((b-a)/(7*86400000))); }
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function todayDayIndex(){ const wd=new Date().getDay(); return DAYS.findIndex(d=>d.wd===wd); }
+function dayLabel(i){ return 'Day '+(i+1); }
 function dstore(k){ k=k||todayKey(); if(!data.dates[k]) data.dates[k]={sets:{},log:[],cardio:false,steps:'',weight:null,photos:[]}; return data.dates[k]; }
 function fmtDate(){ const d=new Date(); return d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
 function applyViewMode(){ const mode=data.viewMode||'auto'; const eff=mode==='auto'?(window.innerWidth>=900?'desktop':'mobile'):mode; document.body.className = eff==='desktop'?'vm-desktop':'vm-phone'; }
@@ -483,19 +483,15 @@ function render(){
   v.scrollTop=0;
 }
 function viewToday(){
-  const di=todayDayIndex(); const s=dstore(); const t=dayTotals();
+  const s=dstore(); const t=dayTotals();
   let out='';
   if(!STORAGE_OK) out+=`<div class="banner"><b>Heads up:</b> saving to this device is blocked in the in-app preview. Open the file in your browser (or Add to Home Screen) and your data will persist.</div>`;
-  // today's session
-  if(di>=0){ const d=DAYS[di];
-    out+=`<div class="card"><h2>Today's Session ${d.priority?'<span class="pill">PRIORITY</span>':''}<span class="sub">${WD[d.wd]}</span></h2>
+  // up next in your rotation (not tied to weekday)
+  { const rp=data.rotationPos||0; const d=DAYS[rp];
+    out+=`<div class="card"><h2>Up Next ${d.priority?'<span class="pill">PRIORITY</span>':''}<span class="sub">Day ${rp+1} of ${DAYS.length}</span></h2>
       <div style="font-size:16px;font-weight:600">${d.name}</div>
-      <div style="font-size:12.5px;color:var(--mut);margin-top:3px">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises</div>
-      <button class="btn" data-act="startlift" data-i="${di}" style="margin-top:13px">Open Workout →</button></div>`;
-  } else {
-    out+=`<div class="card"><h2>Rest Day<span class="sub">${WD[new Date().getDay()]}</span></h2>
-      <div style="font-size:13.5px;color:var(--mut)">No lifting today. Keep your cardio going and get your steps in — this is when growth happens.</div></div>`;
-  }
+      <div style="font-size:12.5px;color:var(--mut);margin-top:3px">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises · train it whenever you're ready</div>
+      <button class="btn" data-act="startlift" data-i="${rp}" style="margin-top:13px">Open Workout →</button></div>`; }
   // deload / training block
   { const w=blockWeeks(), N=data.deloadWeeks||8, due=w>=N;
     out+=`<div class="card ${due?'deload-due':''}"><h2>Training Block<span class="sub">every ${N} wks · <span data-act="setdeload" style="text-decoration:underline;color:var(--blue)">edit</span></span></h2>`;
@@ -520,10 +516,11 @@ function viewToday(){
   return out;
 }
 function viewLift(){
-  const chips=DAYS.map((d,i)=>`<div class="chip ${i===state.liftDay?'on':''}" data-act="pickday" data-i="${i}">${WD[d.wd]} · ${d.tag}</div>`).join('');
+  const rp=data.rotationPos||0;
+  const chips=DAYS.map((d,i)=>`<div class="chip ${i===state.liftDay?'on':''}" data-act="pickday" data-i="${i}">Day ${i+1} · ${d.tag}${i===rp?' <span style="color:var(--good)">●</span>':''}</div>`).join('');
   const d=DAYS[state.liftDay]; const s=dstore();
   let out=`<div class="chips">${chips}</div>`;
-  out+=`<div style="font-size:12.5px;color:var(--mut);margin:2px 4px 10px">${d.name}${d.priority?' · priority day':''}</div>`;
+  out+=`<div style="font-size:12.5px;color:var(--mut);margin:2px 4px 10px">Day ${state.liftDay+1} · ${d.name}${d.priority?' · priority':''}${state.liftDay===rp?' · up next':''}</div>`;
   const rd=data.restDefault||120; const RO=[[60,'60s'],[90,'90s'],[120,'2m'],[180,'3m']];
   out+=`<div class="restsel"><span>Rest timer</span>${RO.map(o=>`<button class="${o[0]===rd?'on':''}" data-act="setrest" data-s="${o[0]}">${o[1]}</button>`).join('')}</div>`;
   d.blocks.forEach(block=>{
@@ -547,6 +544,8 @@ function viewLift(){
         ${ex.p?'<span class="pill">PRIORITY</span>':''}</div><div class="sets">${rows}</div></div>`;
     });
   });
+  const ni=(state.liftDay+1)%DAYS.length;
+  out+=`<button class="btn" data-act="finishday" data-i="${state.liftDay}" style="margin-top:6px">✓ Finish workout — next up: Day ${ni+1} · ${DAYS[ni].tag}</button>`;
   return out;
 }
 function viewFuel(){
@@ -661,7 +660,7 @@ function viewProgram(){
     <div class="tile"><div class="big">${TARGET.f}<small>g</small></div><div class="lab">Fat</div></div></div>
     <div style="font-size:11.5px;color:var(--mut);margin-top:10px">Cardio daily · abs Mon/Wed/Fri · calves Tue/Thu · deload every ${data.deloadWeeks||8} weeks.</div></div>`;
   out+=`<div class="sect-title">Training Split</div>`;
-  DAYS.forEach(d=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">${WD[d.wd]} · ${d.name}</div>
+  DAYS.forEach((d,i)=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">Day ${i+1} · ${d.name}</div>
     <div class="tg">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises</div></div>${d.priority?'<span class="pill">PRIORITY</span>':''}</div>
     <div class="sets">`+ d.blocks.map(b=>(b.label?`<div style="font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);padding:7px 4px 2px">${b.label}</div>`:'')+ b.ex.map(e=>`<div class="setrow" style="justify-content:space-between;gap:10px"><span style="font-weight:600">${e.n}</span><span class="sr">${e.s} × ${e.r}</span></div>`).join('')).join('') +`</div></div>`; });
   out+=`<div class="sect-title">Meal Plan</div>`;
@@ -708,7 +707,7 @@ let toastT=null;
 function showToast(m){ const el=document.getElementById('toast'); el.textContent=m; el.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),2800); vib(); }
 function viewWeek(){
   const keys=weekKeys(), tk=todayKey();
-  const sessions=keys.filter((k,i)=>i<5&&sessionDone(k)).length;
+  const sessions=keys.filter(k=>sessionDone(k)).length;
   const macroDays=keys.filter(macrosHit).length;
   const cardioDays=keys.filter(cardioDone).length;
   const stepVals=keys.map(k=>{const s=data.dates[k]; const n=s&&s.steps?parseInt(s.steps,10):NaN; return isNaN(n)?null:n;}).filter(v=>v!=null);
@@ -841,7 +840,7 @@ function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
     let pick; if(a&&b){ pick=((b._u||0)>(a._u||0))?Object.assign({},b):Object.assign({},a); } else pick=Object.assign({}, a||b);
     if(a&&a.photos) pick.photos=a.photos; out[k]=pick; });
   data.dates=out;
-  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
+  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
 }
 let pushTimer=null;
 function schedulePush(){ if(!sync.enabled) return; setSyncDot('sync'); clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ try{ await ghPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }, 1600); }
@@ -872,6 +871,7 @@ document.addEventListener('click', e=>{
   if(a==='nav'){ state.tab=el.dataset.tab; render(); }
   else if(a==='startlift'){ state.tab='lift'; state.liftDay=+el.dataset.i; render(); }
   else if(a==='pickday'){ state.liftDay=+el.dataset.i; render(); }
+  else if(a==='finishday'){ const ni=((+el.dataset.i)+1)%DAYS.length; data.rotationPos=ni; state.liftDay=ni; touchSettings(); save(); state.tab='today'; render(); showToast('Workout done 💪 Next up: '+DAYS[ni].tag); }
   else if(a==='setdone'){ const ex=dec(el.dataset.ex),i=+el.dataset.i; const s=dstore(); const arr=s.sets[ex]||(s.sets[ex]=[]); arr[i]=arr[i]||{}; arr[i].done=!arr[i].done;
     if(arr[i].done&&(!arr[i].w||!arr[i].r)){ const ls=lastSets(ex); if(ls&&ls[i]){ if(!arr[i].w&&ls[i].w) arr[i].w=ls[i].w; if(!arr[i].r&&ls[i].r) arr[i].r=ls[i].r;
       const row=el.closest('.setrow'); if(row){ const ins=row.querySelectorAll('input'); if(ins[0]&&!ins[0].value) ins[0].value=arr[i].w||''; if(ins[1]&&!ins[1].value) ins[1].value=arr[i].r||''; } } }
@@ -976,6 +976,11 @@ document.getElementById('lockLink').addEventListener('click', ()=>{
 });
 applyViewMode(); ensureDefaults(); render(); initLock(); if(sync.enabled) setSyncDot('ok'); startupSync();
 window.addEventListener('resize', ()=>{ if((data.viewMode||'auto')==='auto') applyViewMode(); });
+let _shownDay=todayKey();
+function checkDay(){ const tk=todayKey(); if(tk!==_shownDay){ _shownDay=tk; render(); } }
+setInterval(checkDay, 30000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) checkDay(); });
+window.addEventListener('focus', checkDay);
 </script>
 </body>
 </html>
