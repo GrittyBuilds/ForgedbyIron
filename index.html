@@ -31,6 +31,20 @@
   .iconbtn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);
     background:var(--card2);color:var(--mut);display:flex;align-items:center;justify-content:center;
     font-size:18px;flex:none}
+  /* Day navigator */
+  .daybar{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--bg)}
+  .daybar .arw{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--txt);display:flex;align-items:center;justify-content:center;
+    font-size:20px;line-height:1;flex:none}
+  .daybar .arw:disabled{opacity:.32}
+  .daybar .lbl{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;gap:7px;
+    height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card2);
+    font-size:13.5px;font-weight:600;color:var(--txt)}
+  .daybar .lbl .cal{font-size:13px;opacity:.75}
+  .daybar .lbl input[type=date]{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;
+    background:transparent;-webkit-appearance:none;appearance:none}
+  .daybar .today{flex:none;height:36px;padding:0 13px;border-radius:10px;border:1px solid var(--gold);
+    background:transparent;color:var(--gold);font-size:12.5px;font-weight:700}
   /* View */
   #view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px)}
   .fade{animation:fade .22s ease}
@@ -261,6 +275,7 @@
       <button class="iconbtn" data-act="menu">⋯</button>
     </div>
   </div>
+  <div class="daybar" id="daybar" style="display:none"></div>
   <div id="view"></div>
   <div id="toast" class="toast"></div>
   <div class="rest-bar" id="restbar"><div class="prog" id="restprog"></div>
@@ -396,10 +411,18 @@ function save(){
     schedulePush(); }, 150);
 }
 function persistLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){ STORAGE_OK=false; } }
-function touch(k){ k=k||todayKey(); const s=dstore(k); s._u=nowMs(); }
+function touch(k){ k=k||curKey(); const s=dstore(k); s._u=nowMs(); }
 function touchSettings(){ data.updatedAt=nowMs(); }
 /* ---------------- STATE ---------------- */
-const state = { tab:'today', liftDay: (data.rotationPos||0), statsView:'week' };
+const state = { tab:'today', liftDay: (data.rotationPos||0), statsView:'week', day: todayKey() };
+/* Currently-viewed day (defaults to today). Day-scoped views/edits operate on this. */
+function curKey(){ return state.day||todayKey(); }
+function isToday(){ return curKey()===todayKey(); }
+function addDays(key,n){ const d=new Date(key+'T00:00'); d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function relDayLabel(key){ const tk=todayKey(); if(key===tk) return 'Today'; if(key===addDays(tk,-1)) return 'Yesterday';
+  return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function longDayLabel(key){ return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
 function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; }
   if(!data.foods){ data.foods=[
     {id:'f_pre',name:'Pre-Workout (100g grapes)',p:1,c:18,f:0},
@@ -422,14 +445,14 @@ function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks
 function blockWeeks(){ const s=data.blockStart||todayKey(); const a=new Date(s+'T00:00'),b=new Date(todayKey()+'T00:00'); return Math.max(0,Math.floor((b-a)/(7*86400000))); }
 function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dayLabel(i){ return 'Day '+(i+1); }
-function dstore(k){ k=k||todayKey(); if(!data.dates[k]) data.dates[k]={sets:{},log:[],cardio:false,steps:'',weight:null,photos:[]}; return data.dates[k]; }
+function dstore(k){ k=k||curKey(); if(!data.dates[k]) data.dates[k]={sets:{},log:[],cardio:false,steps:'',weight:null,photos:[]}; return data.dates[k]; }
 function fmtDate(){ const d=new Date(); return d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
 function applyViewMode(){ const mode=data.viewMode||'auto'; const eff=mode==='auto'?(window.innerWidth>=900?'desktop':'mobile'):mode; document.body.className = eff==='desktop'?'vm-desktop':'vm-phone'; }
 function timeAgo(ms){ const s=Math.floor((nowMs()-ms)/1000); if(s<45) return 'just now'; const m=Math.floor(s/60); if(m<60) return m+' min ago'; const h=Math.floor(m/60); if(h<24) return h+' hr ago'; const d=Math.floor(h/24); return d+' day'+(d===1?'':'s')+' ago'; }
 
 /* ---------------- MACRO CALC ---------------- */
 function dayTotals(k){
-  k=k||todayKey(); const s=data.dates[k]; let t={kc:0,p:0,c:0,f:0}; if(!s) return t;
+  k=k||curKey(); const s=data.dates[k]; let t={kc:0,p:0,c:0,f:0}; if(!s) return t;
   (s.log||[]).forEach(e=>{ const p=+e.p||0,c=+e.c||0,f=+e.f||0; t.p+=p;t.c+=c;t.f+=f;t.kc+=p*4+c*4+f*9; });
   return t;
 }
@@ -454,13 +477,13 @@ function macroBlock(t){
     </div></div>`;
 }
 function lastFor(exName){
-  const keys=Object.keys(data.dates).filter(k=>k<todayKey()).sort().reverse();
+  const keys=Object.keys(data.dates).filter(k=>k<curKey()).sort().reverse();
   for(const k of keys){ const arr=(data.dates[k].sets||{})[exName];
     if(arr){ for(let i=arr.length-1;i>=0;i--){ const st=arr[i]; if(st&&(st.w||st.r)) return `Last: ${st.w||'–'}×${st.r||'–'}`; } } }
   return '';
 }
 function lastSets(exName){
-  const keys=Object.keys(data.dates).filter(k=>k<todayKey()).sort().reverse();
+  const keys=Object.keys(data.dates).filter(k=>k<curKey()).sort().reverse();
   for(const k of keys){ const arr=(data.dates[k].sets||{})[exName];
     if(arr&&arr.some(s=>s&&(s.w||s.r))) return arr.map(s=>({w:(s&&s.w)||'',r:(s&&s.r)||''})); }
   return null;
@@ -472,7 +495,9 @@ function render(){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===state.tab));
   const heads={today:'Today',lift:'Workout',fuel:'Fuel',body:'Body',stats:'Progress',program:'Program'};
   document.getElementById('toph').textContent=heads[state.tab];
-  document.getElementById('topd').textContent=fmtDate();
+  const dayScoped=['today','lift','fuel','body'].includes(state.tab);
+  document.getElementById('topd').textContent=dayScoped?longDayLabel(curKey()):fmtDate();
+  renderDayBar(dayScoped);
   v.className='fade'; void v.offsetWidth; v.className='fade';
   if(state.tab==='today') v.innerHTML=viewToday();
   else if(state.tab==='lift') v.innerHTML=viewLift();
@@ -482,11 +507,24 @@ function render(){
   else if(state.tab==='program') v.innerHTML=viewProgram();
   v.scrollTop=0;
 }
+function renderDayBar(show){
+  const bar=document.getElementById('daybar'); if(!bar) return;
+  if(!show){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  const tk=todayKey(), k=curKey(), atToday=k>=tk;
+  bar.innerHTML=`<button class="arw" data-act="dayprev" aria-label="Previous day">‹</button>
+    <div class="lbl"><span>${relDayLabel(k)}</span><span class="cal">📅</span>
+      <input type="date" id="dayInput" value="${k}" max="${tk}"></div>
+    <button class="arw" data-act="daynext" ${atToday?'disabled':''} aria-label="Next day">›</button>
+    ${atToday?'':'<button class="today" data-act="daytoday">Today</button>'}`;
+}
 function viewToday(){
   const s=dstore(); const t=dayTotals();
   let out='';
   if(!STORAGE_OK) out+=`<div class="banner"><b>Heads up:</b> saving to this device is blocked in the in-app preview. Open the file in your browser (or Add to Home Screen) and your data will persist.</div>`;
-  // up next in your rotation (not tied to weekday)
+  if(!isToday()) out+=`<div class="card" style="border-color:var(--gold)"><h2 style="margin:0">Viewing ${longDayLabel(curKey())}<span class="sub" data-act="daytoday" style="text-decoration:underline;color:var(--gold);cursor:pointer">back to today</span></h2></div>`;
+  // up next / training block — "now" widgets, only on today
+  if(isToday()){
   { const rp=data.rotationPos||0; const d=DAYS[rp];
     out+=`<div class="card"><h2>Up Next ${d.priority?'<span class="pill">PRIORITY</span>':''}<span class="sub">Day ${rp+1} of ${DAYS.length}</span></h2>
       <div style="font-size:16px;font-weight:600">${d.name}</div>
@@ -502,6 +540,7 @@ function viewToday(){
       <div class="bar" style="margin-top:10px"><i style="width:${pct}%;background:var(--gold)"></i></div>
       <div style="font-size:12px;color:var(--mut);margin-top:8px">${N-w} week${N-w===1?'':'s'} until your next deload.</div>`; }
     out+=`</div>`; }
+  } // end today-only widgets
   // macros
   out+=`<div class="card"><h2>Nutrition<span class="sub">tap Fuel to log meals</span></h2>${macroBlock(t)}</div>`;
   // cardio + steps
@@ -550,10 +589,11 @@ function viewLift(){
 }
 function viewFuel(){
   const s=dstore(); const t=dayTotals(); const log=s.log||[];
-  let out=`<div class="card"><h2>Today's Macros</h2>${macroBlock(t)}</div>`;
+  const dw=isToday()?"Today's":relDayLabel(curKey())+"’s";
+  let out=`<div class="card"><h2>${dw} Macros</h2>${macroBlock(t)}</div>`;
   out+=`<button class="btn" data-act="addfood">＋ Add food</button>`;
   if((data.foods||[]).length){ out+=`<div class="sect-title">Quick Add · tap to log</div><div class="foodchips">`+ data.foods.map(f=>`<button class="foodchip" data-act="quicklog" data-id="${f.id}">${esc(f.name)}</button>`).join('') + `</div>`; }
-  out+=`<div class="sect-title">Today's Food</div>`;
+  out+=`<div class="sect-title">${dw} Food</div>`;
   if(!log.length) out+=`<div class="card"><div class="empty">Nothing logged yet. Tap “Add food” to log what you actually ate — your own foods, any portion.</div></div>`;
   else log.forEach((e,i)=>{ const kc=(+e.p||0)*4+(+e.c||0)*4+(+e.f||0)*9;
     out+=`<div class="meal"><div class="info"><div class="nm">${esc(e.name)}</div><div class="mac">${e.p}P · ${e.c}C · ${e.f}F</div></div>
@@ -869,6 +909,9 @@ document.addEventListener('click', e=>{
   const el=e.target.closest('[data-act]'); if(!el) return;
   const a=el.dataset.act;
   if(a==='nav'){ state.tab=el.dataset.tab; render(); }
+  else if(a==='dayprev'){ state.day=addDays(curKey(),-1); render(); }
+  else if(a==='daynext'){ const n=addDays(curKey(),1); if(n<=todayKey()){ state.day=n; render(); } }
+  else if(a==='daytoday'){ state.day=todayKey(); render(); }
   else if(a==='startlift'){ state.tab='lift'; state.liftDay=+el.dataset.i; render(); }
   else if(a==='pickday'){ state.liftDay=+el.dataset.i; render(); }
   else if(a==='finishday'){ const ni=((+el.dataset.i)+1)%DAYS.length; data.rotationPos=ni; state.liftDay=ni; touchSettings(); save(); state.tab='today'; render(); showToast('Workout done 💪 Next up: '+DAYS[ni].tag); }
@@ -918,6 +961,10 @@ document.addEventListener('click', e=>{
       catch(e){ sync.token=''; sync.enabled=false; const m=document.getElementById('syncmsg'); if(m) m.textContent='Could not connect — make sure the token has the gist scope.'; setSyncDot('err'); } })(); }
   else if(a==='syncnow'){ closeSheet(); setSyncDot('sync'); (async()=>{ try{ const remote=await ghPull(); if(remote){ mergeRemote(remote); persistLocal(); render(); } await ghPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); showToast('Synced ✓'); }catch(e){ setSyncDot('err'); showToast('Sync failed — try again'); } })(); }
   else if(a==='syncoff'){ if(confirm('Disconnect cloud sync? Your data stays on this device.')){ sync={enabled:false,token:'',gistId:'',user:'',last:0}; saveSync(); setSyncDot(); closeSheet(); } }
+});
+document.addEventListener('change', e=>{
+  if(e.target && e.target.id==='dayInput'){ let v=e.target.value; if(!v) return;
+    const tk=todayKey(); if(v>tk) v=tk; state.day=v; render(); }
 });
 document.addEventListener('input', e=>{
   const el=e.target.closest('[data-in]'); if(!el) return;
