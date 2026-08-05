@@ -320,7 +320,7 @@
     <button data-act="nav" data-tab="fuel"><svg viewBox="0 0 24 24"><path d="M12 2C7 7 7 11 12 22 17 11 17 7 12 2z"/><path d="M12 22c-3-4-3-7 0-10"/></svg>Fuel</button>
     <button data-act="nav" data-tab="body"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5"/><path d="M5 21c0-4 3.5-6 7-6s7 2 7 6"/></svg>Body</button>
     <button data-act="nav" data-tab="stats"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 17v-4M12 17V8M16 17v-7"/></svg>Stats</button>
-    <button data-act="nav" data-tab="program"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Plan</button>
+    <button data-act="nav" data-tab="program"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Program</button>
   </nav>
   <div class="sheet-bg" data-act="closesheet"></div>
   <div class="sheet" id="sheet"></div>
@@ -1004,18 +1004,6 @@ function viewProgram(){
   split.forEach((d,i)=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">Day ${i+1} · ${d.name}</div>
     <div class="tg">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises</div></div>${d.priority?'<span class="pill">PRIORITY</span>':''}</div>
     <div class="sets">`+ d.blocks.map(b=>(b.label?`<div style="font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);padding:7px 4px 2px">${b.label}</div>`:'')+ b.ex.map(e=>`<div class="setrow" style="justify-content:space-between;gap:10px"><span style="font-weight:600">${e.n}</span><span class="sr">${e.s} × ${e.r}</span></div>`).join('')).join('') +`</div></div>`; });
-  out+=`<div class="sect-title">Meal Plan</div>`;
-  out+=`<div class="note"><h3 style="color:var(--good);margin:0 0 8px;font-size:14px">Built for you</h3>
-    <div style="font-size:12.5px;color:var(--mut);line-height:1.6">100% gluten-free · kept moist &amp; tender for easy swallowing (EoE) · lean, no spicy/tomato/citrus for reflux (GERD) · moderate low-FODMAP portions (IBS) · built from cheap staples. All weights dry/raw.</div></div>`;
-  const PLAN=[
-    ['Pre-Workout','100g grapes','1 / 18 / 0'],
-    ['Post-Workout Cream of Rice','80g cream of rice + 45g whey + 80g blueberries + ~100g lactose-free milk','46 / 86 / 5'],
-    ['Chicken, Rice & Veg','200g chicken breast + 60g dry rice + carrots/spinach + 10g olive oil','53 / 57 / 16'],
-    ['Turkey, Potato & Zucchini','180g 93% turkey + 200g potato + 150g zucchini + 10g olive oil','38 / 38 / 23'],
-    ['Yogurt & PB','200g Greek yogurt + 16g peanut butter','24 / 11 / 12']
-  ];
-  PLAN.forEach(m=>{ out+=`<div class="meal"><div class="info"><div class="nm">${m[0]}</div><div class="det" style="font-size:11.5px;color:var(--mut);margin-top:3px">${m[1]}</div></div><div class="kc" style="white-space:nowrap"><b style="color:var(--txt)">${m[2]}</b><div style="font-size:10px">P / C / F</div></div></div>`; });
-  out+=`<div style="font-size:11.5px;color:var(--mut);margin:4px 4px 0">These are starting templates — log whatever you actually eat on the Fuel tab.</div>`;
   return out;
 }
 function targetsSheet(){
