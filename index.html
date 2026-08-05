@@ -313,7 +313,8 @@
 <script>
 /* ---------------- DATA (pre-loaded program + meals) ---------------- */
 const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const DAYS = [
+const SPLITS = {
+  recomp: [
   {id:'mon', wd:1, tag:'Push', name:'Push — Chest & Side Delts', blocks:[
     {label:null, ex:[
       {n:'Incline Barbell Press', s:4, r:'6–8'},
@@ -393,7 +394,211 @@ const DAYS = [
       {n:'Cable Crunch', s:3, r:'15'},
     ]},
   ]},
-];
+  ],
+  bulk: [
+    {id:'b1', wd:1, tag:'Chest', name:'Chest & Triceps — Heavy', blocks:[
+      {label:null, ex:[
+        {n:'Barbell Bench Press', s:4, r:'5–7'},
+        {n:'Incline DB Press', s:4, r:'8–10'},
+        {n:'Weighted Dips', s:3, r:'8–10'},
+        {n:'Cable Fly', s:3, r:'12–15'},
+        {n:'Close-grip Bench Press', s:3, r:'6–8'},
+        {n:'Overhead Rope Triceps Ext.', s:3, r:'10–12'},
+      ]},
+    ]},
+    {id:'b2', wd:2, tag:'Back', name:'Back & Biceps — Heavy', blocks:[
+      {label:null, ex:[
+        {n:'Deadlift', s:4, r:'4–6'},
+        {n:'Weighted Pull-up', s:4, r:'6–8'},
+        {n:'Barbell Row', s:4, r:'6–8'},
+        {n:'Chest-Supported Row', s:3, r:'10–12'},
+        {n:'Barbell Curl', s:4, r:'8–10'},
+        {n:'Hammer Curl', s:3, r:'10–12'},
+      ]},
+    ]},
+    {id:'b3', wd:3, tag:'Legs', name:'Legs — Heavy', blocks:[
+      {label:null, ex:[
+        {n:'Back Squat', s:5, r:'5'},
+        {n:'Leg Press', s:4, r:'8–10'},
+        {n:'Romanian Deadlift', s:4, r:'8–10'},
+        {n:'Walking Lunge', s:3, r:'10/leg'},
+        {n:'Seated Leg Curl', s:3, r:'12–15'},
+      ]},
+      {label:'Calves', ex:[
+        {n:'Standing Calf Raise', s:4, r:'8–12'},
+      ]},
+    ]},
+    {id:'b4', wd:4, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
+      {label:null, ex:[
+        {n:'Standing Overhead Press', s:4, r:'6–8', p:1},
+        {n:'Seated DB Shoulder Press', s:3, r:'8–10', p:1},
+        {n:'Cable Lateral Raise', s:4, r:'12–15', p:1},
+        {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
+        {n:'EZ-bar Curl', s:4, r:'8–10', p:1},
+        {n:'Close-grip Bench / Dips', s:4, r:'8–10', p:1},
+      ]},
+    ]},
+    {id:'b5', wd:5, tag:'Upper', name:'Upper Volume', blocks:[
+      {label:null, ex:[
+        {n:'Incline DB Press', s:4, r:'8–12'},
+        {n:'Machine Row', s:4, r:'10–12'},
+        {n:'DB Shoulder Press', s:3, r:'10–12'},
+        {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
+        {n:'Cable Fly', s:3, r:'12–15'},
+        {n:'Face Pull', s:3, r:'15–20'},
+        {n:'Preacher Curl', s:3, r:'10–12'},
+        {n:'Rope Pushdown', s:3, r:'12–15'},
+      ]},
+    ]},
+  ],
+  cut: [
+    {id:'c1', wd:1, tag:'Push', name:'Push — Chest & Delts', blocks:[
+      {label:null, ex:[
+        {n:'Incline DB Press', s:4, r:'10–12'},
+        {n:'Flat Machine Press', s:3, r:'12–15'},
+        {n:'Seated DB Shoulder Press', s:3, r:'10–12'},
+        {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
+        {n:'Cable Fly', s:3, r:'15'},
+        {n:'Rope Pushdown', s:3, r:'12–15'},
+        {n:'Overhead Cable Triceps Ext.', s:3, r:'12–15'},
+      ]},
+      {label:'Core Finisher', ex:[
+        {n:'Hanging Leg Raise', s:3, r:'12–15'},
+        {n:'Cable Crunch', s:3, r:'15'},
+      ]},
+    ]},
+    {id:'c2', wd:2, tag:'Pull', name:'Pull — Back & Biceps', blocks:[
+      {label:null, ex:[
+        {n:'Lat Pulldown', s:4, r:'10–12'},
+        {n:'Chest-Supported Row', s:4, r:'10–12'},
+        {n:'Single-arm DB Row', s:3, r:'12–15'},
+        {n:'Straight-arm Pulldown', s:3, r:'15'},
+        {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
+        {n:'Incline DB Curl', s:3, r:'12–15'},
+        {n:'Cable Curl', s:3, r:'12–15'},
+      ]},
+      {label:'Calves', ex:[
+        {n:'Seated Calf Raise', s:4, r:'15–20'},
+      ]},
+    ]},
+    {id:'c3', wd:3, tag:'Legs', name:'Legs', blocks:[
+      {label:null, ex:[
+        {n:'Hack Squat', s:4, r:'10–12'},
+        {n:'Romanian Deadlift', s:3, r:'10–12'},
+        {n:'Leg Press', s:3, r:'12–15'},
+        {n:'Leg Extension', s:4, r:'15–20'},
+        {n:'Lying Leg Curl', s:4, r:'12–15'},
+      ]},
+      {label:'Core Finisher', ex:[
+        {n:'Weighted Cable Crunch', s:3, r:'15'},
+        {n:'Plank', s:3, r:'45–60s'},
+      ]},
+    ]},
+    {id:'c4', wd:4, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
+      {label:null, ex:[
+        {n:'Machine Shoulder Press', s:4, r:'10–12', p:1},
+        {n:'Cable Lateral Raise', s:5, r:'15–20', p:1},
+        {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
+        {n:'DB Lateral Raise (partials)', s:3, r:'20', p:1},
+        {n:'EZ-bar Curl', s:4, r:'10–12', p:1},
+        {n:'Rope Pushdown', s:4, r:'12–15', p:1},
+        {n:'Incline DB Curl', s:3, r:'12–15', p:1},
+        {n:'Overhead Cable Triceps Ext.', s:3, r:'12–15', p:1},
+      ]},
+    ]},
+    {id:'c5', wd:5, tag:'Full Pump', name:'Full-Body Pump & Conditioning', blocks:[
+      {label:null, ex:[
+        {n:'Incline DB Press', s:3, r:'12–15'},
+        {n:'Neutral-grip Pulldown', s:3, r:'12–15'},
+        {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
+        {n:'Leg Extension', s:3, r:'15–20'},
+        {n:'Lying Leg Curl', s:3, r:'15'},
+        {n:'Cable Curl', s:3, r:'15'},
+        {n:'Rope Pushdown', s:3, r:'15'},
+      ]},
+      {label:'Core Finisher', ex:[
+        {n:"Captain's Chair Leg Raise", s:3, r:'15'},
+        {n:'Ab Wheel Rollout', s:3, r:'10–12'},
+      ]},
+    ]},
+  ],
+  prep: [
+    {id:'p1', wd:1, tag:'Chest & Back', name:'Chest & Back — Detail', blocks:[
+      {label:null, ex:[
+        {n:'Incline DB Press', s:4, r:'10–12'},
+        {n:'Weighted Pull-up / Pulldown', s:4, r:'10–12'},
+        {n:'Cable Fly (high-to-low)', s:3, r:'15'},
+        {n:'Chest-Supported Row', s:4, r:'12–15'},
+        {n:'Straight-arm Pulldown', s:3, r:'15–20'},
+      ]},
+      {label:'Abs', ex:[
+        {n:'Hanging Leg Raise', s:4, r:'15'},
+        {n:'Cable Crunch', s:4, r:'15–20'},
+      ]},
+    ]},
+    {id:'p2', wd:2, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
+      {label:null, ex:[
+        {n:'Seated DB Shoulder Press', s:4, r:'10–12', p:1},
+        {n:'Cable Lateral Raise', s:5, r:'15–20', p:1},
+        {n:'Reverse Pec Deck', s:5, r:'15–20', p:1},
+        {n:'DB Lateral Raise (partials)', s:4, r:'20', p:1},
+        {n:'EZ-bar Curl', s:4, r:'10–12', p:1},
+        {n:'Rope Pushdown', s:4, r:'12–15', p:1},
+        {n:'Cable Curl', s:3, r:'15', p:1},
+        {n:'Overhead Cable Triceps Ext.', s:3, r:'15', p:1},
+      ]},
+    ]},
+    {id:'p3', wd:3, tag:'Legs', name:'Legs — Quad & Ham Detail', blocks:[
+      {label:null, ex:[
+        {n:'Hack Squat', s:4, r:'12–15'},
+        {n:'Leg Press (feet low)', s:4, r:'12–15'},
+        {n:'Leg Extension', s:5, r:'15–20'},
+        {n:'Romanian Deadlift', s:4, r:'10–12'},
+        {n:'Lying Leg Curl', s:4, r:'15'},
+      ]},
+      {label:'Calves', ex:[
+        {n:'Standing Calf Raise', s:5, r:'12–15'},
+        {n:'Seated Calf Raise', s:4, r:'15–20'},
+      ]},
+    ]},
+    {id:'p4', wd:4, tag:'Chest & Back', name:'Chest & Back — Volume', blocks:[
+      {label:null, ex:[
+        {n:'Low-incline DB Press', s:4, r:'12–15'},
+        {n:'Neutral-grip Pulldown', s:4, r:'12–15'},
+        {n:'Pec Deck', s:3, r:'15–20'},
+        {n:'Single-arm Cable Row', s:4, r:'12–15'},
+        {n:'Reverse Pec Deck', s:4, r:'20', p:1},
+      ]},
+      {label:'Abs', ex:[
+        {n:"Captain's Chair Leg Raise", s:4, r:'15'},
+        {n:'Weighted Decline Sit-up', s:4, r:'15'},
+      ]},
+    ]},
+    {id:'p5', wd:5, tag:'Delts & Arms', name:'Delts & Arms — Volume', priority:1, blocks:[
+      {label:null, ex:[
+        {n:'Machine Shoulder Press', s:4, r:'12–15', p:1},
+        {n:'Cable Lateral Raise', s:6, r:'15–20', p:1},
+        {n:'Face Pull', s:4, r:'15–20', p:1},
+        {n:'Preacher Curl', s:4, r:'12–15', p:1},
+        {n:'Hammer Curl', s:3, r:'12–15', p:1},
+        {n:'Rope Pushdown', s:4, r:'15', p:1},
+        {n:'Overhead Cable Triceps Ext.', s:3, r:'15', p:1},
+      ]},
+    ]},
+    {id:'p6', wd:6, tag:'Posing & Abs', name:'Posing, Conditioning & Abs', blocks:[
+      {label:'Posing', ex:[
+        {n:'Quarter Turns + Mandatories', s:3, r:'60s hold'},
+        {n:'Vacuum Practice', s:3, r:'20s'},
+      ]},
+      {label:'Abs & Conditioning', ex:[
+        {n:'Hanging Leg Raise', s:4, r:'15'},
+        {n:'Cable Woodchop', s:3, r:'12/side'},
+        {n:'Ab Wheel Rollout', s:3, r:'12'},
+      ]},
+    ]},
+  ],
+};
+function curSplit(){ return SPLITS[activePhase().id] || SPLITS.recomp; }
 /* Program phases — each drives the macro targets the whole app tracks against. */
 const PHASES = [
   {id:'recomp', name:'Recomp', tagline:'Maintain · recomposition',
@@ -418,6 +623,9 @@ function effectiveTarget(id){ const d=phaseDefaults(id), o=(data&&data.phaseTarg
   return {kc:num(o.kc,d.kc), p:num(o.p,d.p), c:num(o.c,d.c), f:num(o.f,d.f)}; }
 function isCustomPhase(id){ const o=data&&data.phaseTargets&&data.phaseTargets[id]; return !!(o&&Object.keys(o).length); }
 function applyPhase(){ const t=effectiveTarget(activePhase().id); TARGET.kc=t.kc; TARGET.p=t.p; TARGET.c=t.c; TARGET.f=t.f; }
+/* Rotation pointer is per phase, so switching phases keeps each split's place. */
+function getRot(){ const sp=curSplit(), id=activePhase().id; let v=(data&&data.rotationByPhase&&data.rotationByPhase[id]); v=parseInt(v,10); if(isNaN(v)||v<0) v=0; if(v>=sp.length) v=v%sp.length; return v; }
+function setRot(i){ const sp=curSplit(), id=activePhase().id; i=((i%sp.length)+sp.length)%sp.length; (data.rotationByPhase=data.rotationByPhase||{})[id]=i; }
 const MC = {kc:'var(--gold)', p:'var(--red)', c:'var(--blue)', f:'var(--green)'};
 
 /* ---------------- STORAGE (with graceful fallback) ---------------- */
@@ -441,7 +649,7 @@ function persistLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(data)); }
 function touch(k){ k=k||curKey(); const s=dstore(k); s._u=nowMs(); }
 function touchSettings(){ data.updatedAt=nowMs(); }
 /* ---------------- STATE ---------------- */
-const state = { tab:'today', liftDay: (data.rotationPos||0), statsView:'week', day: todayKey() };
+const state = { tab:'today', liftDay: 0, statsView:'week', day: todayKey() };
 /* Currently-viewed day (defaults to today). Day-scoped views/edits operate on this. */
 function curKey(){ return state.day||todayKey(); }
 function isToday(){ return curKey()===todayKey(); }
@@ -450,7 +658,7 @@ function addDays(key,n){ const d=new Date(key+'T00:00'); d.setDate(d.getDate()+n
 function relDayLabel(key){ const tk=todayKey(); if(key===tk) return 'Today'; if(key===addDays(tk,-1)) return 'Yesterday';
   return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
 function longDayLabel(key){ return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
-function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; } if(!data.phaseTargets){ data.phaseTargets={}; ch=true; }
+function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; } if(!data.phaseTargets){ data.phaseTargets={}; ch=true; } if(!data.rotationByPhase){ data.rotationByPhase={}; if(typeof data.rotationPos==='number') data.rotationByPhase.recomp=data.rotationPos; ch=true; }
   if(!data.foods){ data.foods=[
     {id:'f_pre',name:'Pre-Workout (100g grapes)',p:1,c:18,f:0},
     {id:'f_cor',name:'Cream of Rice + Whey',p:46,c:86,f:5},
@@ -553,8 +761,8 @@ function viewToday(){
   if(!isToday()) out+=`<div class="card" style="border-color:var(--gold)"><h2 style="margin:0">Viewing ${longDayLabel(curKey())}<span class="sub" data-act="daytoday" style="text-decoration:underline;color:var(--gold);cursor:pointer">back to today</span></h2></div>`;
   // up next / training block — "now" widgets, only on today
   if(isToday()){
-  { const rp=data.rotationPos||0; const d=DAYS[rp];
-    out+=`<div class="card"><h2>Up Next ${d.priority?'<span class="pill">PRIORITY</span>':''}<span class="sub">Day ${rp+1} of ${DAYS.length}</span></h2>
+  { const sp=curSplit(); const rp=getRot(); const d=sp[rp];
+    out+=`<div class="card"><h2>Up Next ${d.priority?'<span class="pill">PRIORITY</span>':''}<span class="sub">Day ${rp+1} of ${sp.length}</span></h2>
       <div style="font-size:16px;font-weight:600">${d.name}</div>
       <div style="font-size:12.5px;color:var(--mut);margin-top:3px">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises · train it whenever you're ready</div>
       <button class="btn" data-act="startlift" data-i="${rp}" style="margin-top:13px">Open Workout →</button></div>`; }
@@ -583,9 +791,10 @@ function viewToday(){
   return out;
 }
 function viewLift(){
-  const rp=data.rotationPos||0;
-  const chips=DAYS.map((d,i)=>`<div class="chip ${i===state.liftDay?'on':''}" data-act="pickday" data-i="${i}">Day ${i+1} · ${d.tag}${i===rp?' <span style="color:var(--good)">●</span>':''}</div>`).join('');
-  const d=DAYS[state.liftDay]; const s=dstore();
+  const sp=curSplit(); const rp=getRot();
+  if(state.liftDay>=sp.length||state.liftDay<0) state.liftDay=rp;
+  const chips=sp.map((d,i)=>`<div class="chip ${i===state.liftDay?'on':''}" data-act="pickday" data-i="${i}">Day ${i+1} · ${d.tag}${i===rp?' <span style="color:var(--good)">●</span>':''}</div>`).join('');
+  const d=sp[state.liftDay]; const s=dstore();
   let out=`<div class="chips">${chips}</div>`;
   out+=`<div style="font-size:12.5px;color:var(--mut);margin:2px 4px 10px">Day ${state.liftDay+1} · ${d.name}${d.priority?' · priority':''}${state.liftDay===rp?' · up next':''}</div>`;
   const rd=data.restDefault||120; const RO=[[60,'60s'],[90,'90s'],[120,'2m'],[180,'3m']];
@@ -611,8 +820,8 @@ function viewLift(){
         ${ex.p?'<span class="pill">PRIORITY</span>':''}</div><div class="sets">${rows}</div></div>`;
     });
   });
-  const ni=(state.liftDay+1)%DAYS.length;
-  out+=`<button class="btn" data-act="finishday" data-i="${state.liftDay}" style="margin-top:6px">✓ Finish workout — next up: Day ${ni+1} · ${DAYS[ni].tag}</button>`;
+  const ni=(state.liftDay+1)%sp.length;
+  out+=`<button class="btn" data-act="finishday" data-i="${state.liftDay}" style="margin-top:6px">✓ Finish workout — next up: Day ${ni+1} · ${sp[ni].tag}</button>`;
   return out;
 }
 function viewFuel(){
@@ -730,8 +939,9 @@ function viewProgram(){
     <div class="tile"><div class="big">${TARGET.c}<small>g</small></div><div class="lab">Carbs</div></div>
     <div class="tile"><div class="big">${TARGET.f}<small>g</small></div><div class="lab">Fat</div></div></div>
     <div style="font-size:11.5px;color:var(--mut);margin-top:10px">${ph.cardio} · deload every ${data.deloadWeeks||8} weeks.</div></div>`;
-  out+=`<div class="sect-title">Training Split</div>`;
-  DAYS.forEach((d,i)=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">Day ${i+1} · ${d.name}</div>
+  const split=curSplit();
+  out+=`<div class="sect-title">Training Split · ${split.length}-day</div>`;
+  split.forEach((d,i)=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">Day ${i+1} · ${d.name}</div>
     <div class="tg">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises</div></div>${d.priority?'<span class="pill">PRIORITY</span>':''}</div>
     <div class="sets">`+ d.blocks.map(b=>(b.label?`<div style="font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);padding:7px 4px 2px">${b.label}</div>`:'')+ b.ex.map(e=>`<div class="setrow" style="justify-content:space-between;gap:10px"><span style="font-weight:600">${e.n}</span><span class="sr">${e.s} × ${e.r}</span></div>`).join('')).join('') +`</div></div>`; });
   out+=`<div class="sect-title">Meal Plan</div>`;
@@ -946,7 +1156,7 @@ function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
     let pick; if(a&&b){ pick=((b._u||0)>(a._u||0))?Object.assign({},b):Object.assign({},a); } else pick=Object.assign({}, a||b);
     if(a&&a.photos) pick.photos=a.photos; out[k]=pick; });
   data.dates=out;
-  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos','phase','phaseTargets'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
+  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos','rotationByPhase','phase','phaseTargets'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
 }
 let pushTimer=null;
 function schedulePush(){ if(!sync.enabled) return; setSyncDot('sync'); clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ try{ await supPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }, 1600); }
@@ -984,7 +1194,7 @@ document.addEventListener('click', e=>{
   else if(a==='daytoday'){ state.day=todayKey(); render(); }
   else if(a==='startlift'){ state.tab='lift'; state.liftDay=+el.dataset.i; render(); }
   else if(a==='pickday'){ state.liftDay=+el.dataset.i; render(); }
-  else if(a==='finishday'){ const ni=((+el.dataset.i)+1)%DAYS.length; data.rotationPos=ni; state.liftDay=ni; touchSettings(); save(); state.tab='today'; render(); showToast('Workout done 💪 Next up: '+DAYS[ni].tag); }
+  else if(a==='finishday'){ const sp=curSplit(); const ni=((+el.dataset.i)+1)%sp.length; setRot(ni); state.liftDay=ni; touchSettings(); save(); state.tab='today'; render(); showToast('Workout done 💪 Next up: '+sp[ni].tag); }
   else if(a==='setdone'){ const ex=dec(el.dataset.ex),i=+el.dataset.i; const s=dstore(); const arr=s.sets[ex]||(s.sets[ex]=[]); arr[i]=arr[i]||{}; arr[i].done=!arr[i].done;
     if(arr[i].done&&(!arr[i].w||!arr[i].r)){ const ls=lastSets(ex); if(ls&&ls[i]){ if(!arr[i].w&&ls[i].w) arr[i].w=ls[i].w; if(!arr[i].r&&ls[i].r) arr[i].r=ls[i].r;
       const row=el.closest('.setrow'); if(row){ const ins=row.querySelectorAll('input'); if(ins[0]&&!ins[0].value) ins[0].value=arr[i].w||''; if(ins[1]&&!ins[1].value) ins[1].value=arr[i].r||''; } } }
@@ -995,7 +1205,7 @@ document.addEventListener('click', e=>{
   else if(a==='segtrends'){ state.statsView='trends'; render(); }
   else if(a==='segprs'){ state.statsView='prs'; render(); }
   else if(a==='quicklog'){ const f=(data.foods||[]).find(x=>x.id===el.dataset.id); if(f){ const s=dstore(); (s.log=s.log||[]).push({name:f.name,p:f.p,c:f.c,f:f.f}); touch(); save(); render(); showToast('Logged '+f.name); } }
-  else if(a==='setphase'){ const p=el.dataset.p; if(PHASES.some(x=>x.id===p)&&p!==data.phase){ data.phase=p; applyPhase(); touchSettings(); save(); render(); showToast('Switched to '+activePhase().name); } }
+  else if(a==='setphase'){ const p=el.dataset.p; if(PHASES.some(x=>x.id===p)&&p!==data.phase){ data.phase=p; applyPhase(); state.liftDay=getRot(); touchSettings(); save(); render(); showToast('Switched to '+activePhase().name); } }
   else if(a==='edittargets'){ targetsSheet(); }
   else if(a==='savetargets'){ const g=id=>Math.round(parseFloat(val(id))); const kc=g('tgkc'),p=g('tgp'),c=g('tgc'),f=g('tgf');
     const bad=[kc,p,c,f].some(n=>isNaN(n)||n<0||n>20000); if(bad){ const m=document.getElementById('tgtmsg'); if(m) m.textContent='Enter valid numbers for all four targets.'; return; }
@@ -1102,7 +1312,7 @@ document.getElementById('lockLink').addEventListener('click', ()=>{
   else if(lockMode==='confirm'){ buf=''; firstPin=''; lockMode='create'; renderLock(); }
   else { if(confirm('Forgot your PIN? This erases your logged data so you can set a new code. If you have an exported backup you can restore it afterward.')){ data={v:1,unit:data.unit||'lb',restDefault:data.restDefault||120,dates:{}}; ensureDefaults(); save(); buf=''; firstPin=''; lockMode='create'; renderLock(); } }
 });
-applyViewMode(); ensureDefaults(); render(); initLock(); if(sync.enabled) setSyncDot('ok'); startupSync();
+applyViewMode(); ensureDefaults(); applyPhase(); state.liftDay=getRot(); render(); initLock(); if(sync.enabled) setSyncDot('ok'); startupSync();
 window.addEventListener('resize', ()=>{ if((data.viewMode||'auto')==='auto') applyViewMode(); });
 let _shownDay=todayKey();
 function checkDay(){ const tk=todayKey(); if(tk!==_shownDay){ _shownDay=tk; render(); } }
