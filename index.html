@@ -600,28 +600,43 @@ const SPLITS = {
 };
 function curSplit(){ return SPLITS[activePhase().id] || SPLITS.recomp; }
 /* Program phases — each drives the macro targets the whole app tracks against. */
+// Auto coefficients are per POUND of bodyweight (kcalPerLb, proteinPerLb) and % of calories (fatPct).
 const PHASES = [
   {id:'recomp', name:'Recomp', tagline:'Maintain · recomposition',
    desc:'Hold your weight near maintenance and slowly trade fat for muscle, with protein kept high.',
-   kc:2000, p:160, c:215, f:56, cardio:'Cardio daily · abs Mon/Wed/Fri · calves Tue/Thu'},
+   kc:2000, p:160, c:215, f:56, cardio:'Cardio daily · abs Mon/Wed/Fri · calves Tue/Thu',
+   kcalPerLb:12.5, proteinPerLb:1.0, fatPct:0.25},
   {id:'bulk', name:'Lean Bulk', tagline:'Controlled surplus',
    desc:'A controlled calorie surplus to add size and strength while staying relatively tight.',
-   kc:2450, p:180, c:290, f:65, cardio:'Cardio 2–3×/week to stay conditioned'},
+   kc:2450, p:180, c:290, f:65, cardio:'Cardio 2–3×/week to stay conditioned',
+   kcalPerLb:15.3, proteinPerLb:1.1, fatPct:0.24},
   {id:'cut', name:'Cut', tagline:'Fat loss',
    desc:'A moderate deficit to strip body fat while holding onto muscle with high protein.',
-   kc:1650, p:185, c:120, f:45, cardio:'Cardio daily · 30–40 min low-intensity'},
+   kc:1650, p:185, c:120, f:45, cardio:'Cardio daily · 30–40 min low-intensity',
+   kcalPerLb:10.3, proteinPerLb:1.15, fatPct:0.25},
   {id:'prep', name:'Contest Prep', tagline:'Stage-ready',
    desc:'An aggressive deficit with very high protein to reach stage-ready condition — track everything tightly.',
-   kc:1450, p:190, c:90, f:38, cardio:'Cardio up to 2×/day · daily steps 12k+'},
+   kc:1450, p:190, c:90, f:38, cardio:'Cardio up to 2×/day · daily steps 12k+',
+   kcalPerLb:9.0, proteinPerLb:1.2, fatPct:0.23},
 ];
 const TARGET = {kc:2000, p:160, c:215, f:56};
 function activePhase(){ return PHASES.find(p=>p.id===(data&&data.phase))||PHASES[0]; }
 function phaseDefaults(id){ return PHASES.find(p=>p.id===id)||PHASES[0]; }
-/* Effective target = phase standard, overridden by any per-phase custom values. */
-function effectiveTarget(id){ const d=phaseDefaults(id), o=(data&&data.phaseTargets&&data.phaseTargets[id])||{};
-  const num=(v,def)=>{ v=parseFloat(v); return isNaN(v)?def:v; };
-  return {kc:num(o.kc,d.kc), p:num(o.p,d.p), c:num(o.c,d.c), f:num(o.f,d.f)}; }
-function isCustomPhase(id){ const o=data&&data.phaseTargets&&data.phaseTargets[id]; return !!(o&&Object.keys(o).length); }
+/* Latest logged bodyweight, stored internally in lb (null if none yet). */
+function latestWeightLb(){ const ks=Object.keys(data&&data.dates||{}).filter(k=>data.dates[k]&&data.dates[k].weight!=null).sort(); return ks.length? data.dates[ks[ks.length-1]].weight : null; }
+/* Auto target from bodyweight: calories & protein per lb, fat as % of calories, carbs fill the rest. */
+function autoTarget(id){ const d=phaseDefaults(id), bw=latestWeightLb(); if(!bw) return null;
+  const kc=Math.round(bw*d.kcalPerLb), p=Math.round(bw*d.proteinPerLb), f=Math.round(kc*d.fatPct/9);
+  let c=Math.round((kc-p*4-f*9)/4); if(c<0) c=0; return {kc,p,c,f}; }
+/* Per-phase target mode: 'standard' | 'custom' | 'auto'. Falls back to custom if legacy override exists. */
+function phaseMode(id){ const m=data&&data.phaseMode&&data.phaseMode[id]; if(m) return m;
+  const o=data&&data.phaseTargets&&data.phaseTargets[id]; return (o&&Object.keys(o).length)?'custom':'standard'; }
+/* Effective target = the active mode: standard defaults, a custom override, or auto-from-bodyweight. */
+function effectiveTarget(id){ const d=phaseDefaults(id), mode=phaseMode(id);
+  if(mode==='auto'){ const a=autoTarget(id); if(a) return a; }
+  if(mode==='custom'){ const o=(data&&data.phaseTargets&&data.phaseTargets[id])||{}; const num=(v,def)=>{ v=parseFloat(v); return isNaN(v)?def:v; };
+    return {kc:num(o.kc,d.kc), p:num(o.p,d.p), c:num(o.c,d.c), f:num(o.f,d.f)}; }
+  return {kc:d.kc, p:d.p, c:d.c, f:d.f}; }
 function applyPhase(){ const t=effectiveTarget(activePhase().id); TARGET.kc=t.kc; TARGET.p=t.p; TARGET.c=t.c; TARGET.f=t.f; }
 /* Rotation pointer is per phase, so switching phases keeps each split's place. */
 function getRot(){ const sp=curSplit(), id=activePhase().id; let v=(data&&data.rotationByPhase&&data.rotationByPhase[id]); v=parseInt(v,10); if(isNaN(v)||v<0) v=0; if(v>=sp.length) v=v%sp.length; return v; }
@@ -658,7 +673,7 @@ function addDays(key,n){ const d=new Date(key+'T00:00'); d.setDate(d.getDate()+n
 function relDayLabel(key){ const tk=todayKey(); if(key===tk) return 'Today'; if(key===addDays(tk,-1)) return 'Yesterday';
   return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
 function longDayLabel(key){ return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
-function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; } if(!data.phaseTargets){ data.phaseTargets={}; ch=true; } if(!data.rotationByPhase){ data.rotationByPhase={}; if(typeof data.rotationPos==='number') data.rotationByPhase.recomp=data.rotationPos; ch=true; }
+function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; } if(!data.phaseTargets){ data.phaseTargets={}; ch=true; } if(!data.phaseMode){ data.phaseMode={}; ch=true; } if(!data.rotationByPhase){ data.rotationByPhase={}; if(typeof data.rotationPos==='number') data.rotationByPhase.recomp=data.rotationPos; ch=true; }
   if(!data.foods){ data.foods=[
     {id:'f_pre',name:'Pre-Workout (100g grapes)',p:1,c:18,f:0},
     {id:'f_cor',name:'Cream of Rice + Whey',p:46,c:86,f:5},
@@ -933,7 +948,7 @@ function viewProgram(){
   out+=`<div class="card"><div class="kicker" style="color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Forged by Iron · ${ph.name}</div>
     <h2 style="margin:6px 0 4px;font-size:18px">${ph.tagline}</h2>
     <div style="font-size:13px;color:var(--mut)">${ph.desc}</div></div>`;
-  out+=`<div class="card"><h2>Daily Targets<span class="sub">${isCustomPhase(ph.id)?'custom':'standard'} · <span data-act="edittargets" style="text-decoration:underline;color:var(--blue)">edit</span></span></h2><div class="tiles">
+  out+=`<div class="card"><h2>Daily Targets<span class="sub">${phaseMode(ph.id)} · <span data-act="edittargets" style="text-decoration:underline;color:var(--blue)">edit</span></span></h2><div class="tiles">
     <div class="tile"><div class="big">${TARGET.kc}</div><div class="lab">Calories</div></div>
     <div class="tile"><div class="big">${TARGET.p}<small>g</small></div><div class="lab">Protein</div></div>
     <div class="tile"><div class="big">${TARGET.c}<small>g</small></div><div class="lab">Carbs</div></div>
@@ -959,21 +974,43 @@ function viewProgram(){
   return out;
 }
 function targetsSheet(){
-  const ph=activePhase(), t=effectiveTarget(ph.id), d=phaseDefaults(ph.id), custom=isCustomPhase(ph.id);
-  const fld=(lbl,id,v,calc)=>`<div class="tgt-f"><span>${lbl}</span><input class="field" id="${id}" inputmode="numeric" value="${v}"${calc?' data-in="tgtcalc"':''}></div>`;
+  const ph=activePhase(), id=ph.id, d=phaseDefaults(id), mode=phaseMode(id), t=effectiveTarget(id);
+  const seg=['standard','auto','custom'].map(m=>`<button class="${m===mode?'on':''}" data-act="tgtmode" data-m="${m}">${m[0].toUpperCase()+m.slice(1)}</button>`).join('');
+  let body='';
+  if(mode==='auto'){
+    const bw=latestWeightLb();
+    const wLine = bw!=null
+      ? `Auto from bodyweight <b style="color:var(--txt)">${trimN(toUnitNum(bw))} ${data.unit}</b> · <b style="color:var(--txt)">${d.proteinPerLb}g/lb</b> protein · <b style="color:var(--txt)">${Math.round(d.fatPct*100)}%</b> fat · <b style="color:var(--txt)">${d.kcalPerLb}</b> kcal/lb`
+      : `<b style="color:var(--gold)">Log a bodyweight first</b> — Body tab. Using standard targets until then.`;
+    body=`<div style="font-size:11.5px;color:var(--mut);text-align:center;line-height:1.55;margin-bottom:12px">${wLine}</div>
+      <div class="tiles">
+        <div class="tile"><div class="big">${t.kc}</div><div class="lab">Calories</div></div>
+        <div class="tile"><div class="big">${t.p}<small>g</small></div><div class="lab">Protein</div></div>
+        <div class="tile"><div class="big">${t.c}<small>g</small></div><div class="lab">Carbs</div></div>
+        <div class="tile"><div class="big">${t.f}<small>g</small></div><div class="lab">Fat</div></div></div>
+      <div style="font-size:11px;color:var(--mut);text-align:center;margin-top:11px">Recalculates automatically as your logged weight changes.</div>`;
+  } else if(mode==='custom'){
+    const fld=(lbl,fid,v,calc)=>`<div class="tgt-f"><span>${lbl}</span><input class="field" id="${fid}" inputmode="numeric" value="${v}"${calc?' data-in="tgtcalc"':''}></div>`;
+    body=`<div class="tgt-grid">
+        ${fld('Calories','tgkc',t.kc,false)}
+        ${fld('Protein g','tgp',t.p,true)}
+        ${fld('Carbs g','tgc',t.c,true)}
+        ${fld('Fat g','tgf',t.f,true)}</div>
+      <div id="tgcalc" style="font-size:11.5px;color:var(--mut);text-align:center;margin:11px 0 13px"></div>
+      <button class="btn green" data-act="savetargets">Save targets</button>
+      <div id="tgtmsg" style="font-size:12px;color:var(--red);text-align:center;margin-top:9px"></div>`;
+  } else {
+    body=`<div class="tiles">
+        <div class="tile"><div class="big">${d.kc}</div><div class="lab">Calories</div></div>
+        <div class="tile"><div class="big">${d.p}<small>g</small></div><div class="lab">Protein</div></div>
+        <div class="tile"><div class="big">${d.c}<small>g</small></div><div class="lab">Carbs</div></div>
+        <div class="tile"><div class="big">${d.f}<small>g</small></div><div class="lab">Fat</div></div></div>
+      <div style="font-size:11px;color:var(--mut);text-align:center;margin-top:11px">The recommended starting targets for this phase.</div>`;
+  }
   openSheet(`<h3>${ph.name} Targets</h3>
-    <div style="font-size:12.5px;color:var(--mut);text-align:center;line-height:1.5;margin-bottom:13px">Tune your daily macro targets for this phase to match your current needs.<br><span style="font-size:11.5px">Standard: ${d.kc} kcal · ${d.p}P / ${d.c}C / ${d.f}F</span></div>
-    <div class="tgt-grid">
-      ${fld('Calories','tgkc',t.kc,false)}
-      ${fld('Protein g','tgp',t.p,true)}
-      ${fld('Carbs g','tgc',t.c,true)}
-      ${fld('Fat g','tgf',t.f,true)}
-    </div>
-    <div id="tgcalc" style="font-size:11.5px;color:var(--mut);text-align:center;margin:11px 0 13px"></div>
-    <button class="btn green" data-act="savetargets">Save targets</button>
-    ${custom?'<button class="btn ghost" style="margin-top:9px;color:var(--red)" data-act="resettargets">Reset to standard</button>':''}
-    <div id="tgtmsg" style="font-size:12px;color:var(--red);text-align:center;margin-top:9px"></div>`);
-  updateTgtCalc();
+    <div class="seg" style="margin-bottom:14px">${seg}</div>
+    ${body}`);
+  if(mode==='custom') updateTgtCalc();
 }
 function updateTgtCalc(){ const el=document.getElementById('tgcalc'); if(!el) return;
   const p=parseFloat(val('tgp'))||0, c=parseFloat(val('tgc'))||0, f=parseFloat(val('tgf'))||0;
@@ -1156,7 +1193,7 @@ function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
     let pick; if(a&&b){ pick=((b._u||0)>(a._u||0))?Object.assign({},b):Object.assign({},a); } else pick=Object.assign({}, a||b);
     if(a&&a.photos) pick.photos=a.photos; out[k]=pick; });
   data.dates=out;
-  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos','rotationByPhase','phase','phaseTargets'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
+  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos','rotationByPhase','phase','phaseTargets','phaseMode'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
 }
 let pushTimer=null;
 function schedulePush(){ if(!sync.enabled) return; setSyncDot('sync'); clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ try{ await supPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }, 1600); }
@@ -1207,10 +1244,12 @@ document.addEventListener('click', e=>{
   else if(a==='quicklog'){ const f=(data.foods||[]).find(x=>x.id===el.dataset.id); if(f){ const s=dstore(); (s.log=s.log||[]).push({name:f.name,p:f.p,c:f.c,f:f.f}); touch(); save(); render(); showToast('Logged '+f.name); } }
   else if(a==='setphase'){ const p=el.dataset.p; if(PHASES.some(x=>x.id===p)&&p!==data.phase){ data.phase=p; applyPhase(); state.liftDay=getRot(); touchSettings(); save(); render(); showToast('Switched to '+activePhase().name); } }
   else if(a==='edittargets'){ targetsSheet(); }
+  else if(a==='tgtmode'){ const m=el.dataset.m, id=activePhase().id; if(['standard','auto','custom'].indexOf(m)<0) return;
+    if(m==='custom'){ const cur=effectiveTarget(id); (data.phaseTargets=data.phaseTargets||{})[id]=Object.assign({}, data.phaseTargets[id]||cur); }
+    (data.phaseMode=data.phaseMode||{})[id]=m; applyPhase(); touchSettings(); save(); render(); targetsSheet(); }
   else if(a==='savetargets'){ const g=id=>Math.round(parseFloat(val(id))); const kc=g('tgkc'),p=g('tgp'),c=g('tgc'),f=g('tgf');
     const bad=[kc,p,c,f].some(n=>isNaN(n)||n<0||n>20000); if(bad){ const m=document.getElementById('tgtmsg'); if(m) m.textContent='Enter valid numbers for all four targets.'; return; }
-    const id=activePhase().id; (data.phaseTargets=data.phaseTargets||{})[id]={kc,p,c,f}; applyPhase(); touchSettings(); save(); closeSheet(); render(); showToast(activePhase().name+' targets updated'); }
-  else if(a==='resettargets'){ const id=activePhase().id; if(data.phaseTargets) delete data.phaseTargets[id]; applyPhase(); touchSettings(); save(); closeSheet(); render(); showToast('Reset to standard targets'); }
+    const id=activePhase().id; (data.phaseTargets=data.phaseTargets||{})[id]={kc,p,c,f}; (data.phaseMode=data.phaseMode||{})[id]='custom'; applyPhase(); touchSettings(); save(); closeSheet(); render(); showToast(activePhase().name+' targets updated'); }
   else if(a==='didDeload'){ data.blockStart=todayKey(); touchSettings(); save(); render(); showToast('New training block started 💪'); }
   else if(a==='setdeload'){ const n=prompt('Deload every how many weeks? (3–16)', data.deloadWeeks||8); if(n){ const v=parseInt(n,10); if(v>=3&&v<=16){ data.deloadWeeks=v; touchSettings(); save(); render(); } } }
   else if(a==='setrest'){ data.restDefault=+el.dataset.s; touchSettings(); save(); render(); }
