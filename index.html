@@ -390,7 +390,24 @@ const DAYS = [
     ]},
   ]},
 ];
+/* Program phases — each drives the macro targets the whole app tracks against. */
+const PHASES = [
+  {id:'recomp', name:'Recomp', tagline:'Maintain · recomposition',
+   desc:'Hold your weight near maintenance and slowly trade fat for muscle, with protein kept high.',
+   kc:2000, p:160, c:215, f:56, cardio:'Cardio daily · abs Mon/Wed/Fri · calves Tue/Thu'},
+  {id:'bulk', name:'Lean Bulk', tagline:'Controlled surplus',
+   desc:'A controlled calorie surplus to add size and strength while staying relatively tight.',
+   kc:2450, p:180, c:290, f:65, cardio:'Cardio 2–3×/week to stay conditioned'},
+  {id:'cut', name:'Cut', tagline:'Fat loss',
+   desc:'A moderate deficit to strip body fat while holding onto muscle with high protein.',
+   kc:1650, p:185, c:120, f:45, cardio:'Cardio daily · 30–40 min low-intensity'},
+  {id:'prep', name:'Contest Prep', tagline:'Stage-ready',
+   desc:'An aggressive deficit with very high protein to reach stage-ready condition — track everything tightly.',
+   kc:1450, p:190, c:90, f:38, cardio:'Cardio up to 2×/day · daily steps 12k+'},
+];
 const TARGET = {kc:2000, p:160, c:215, f:56};
+function activePhase(){ return PHASES.find(p=>p.id===(data&&data.phase))||PHASES[0]; }
+function applyPhase(){ const p=activePhase(); TARGET.kc=p.kc; TARGET.p=p.p; TARGET.c=p.c; TARGET.f=p.f; }
 const MC = {kc:'var(--gold)', p:'var(--red)', c:'var(--blue)', f:'var(--green)'};
 
 /* ---------------- STORAGE (with graceful fallback) ---------------- */
@@ -423,7 +440,7 @@ function addDays(key,n){ const d=new Date(key+'T00:00'); d.setDate(d.getDate()+n
 function relDayLabel(key){ const tk=todayKey(); if(key===tk) return 'Today'; if(key===addDays(tk,-1)) return 'Yesterday';
   return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
 function longDayLabel(key){ return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
-function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; }
+function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; }
   if(!data.foods){ data.foods=[
     {id:'f_pre',name:'Pre-Workout (100g grapes)',p:1,c:18,f:0},
     {id:'f_cor',name:'Cream of Rice + Whey',p:46,c:86,f:5},
@@ -491,6 +508,7 @@ function lastSets(exName){
 
 /* ---------------- VIEWS ---------------- */
 function render(){
+  applyPhase();
   const v=document.getElementById('view');
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.tab===state.tab));
   const heads={today:'Today',lift:'Workout',fuel:'Fuel',body:'Body',stats:'Progress',program:'Program'};
@@ -542,7 +560,7 @@ function viewToday(){
     out+=`</div>`; }
   } // end today-only widgets
   // macros
-  out+=`<div class="card"><h2>Nutrition<span class="sub">tap Fuel to log meals</span></h2>${macroBlock(t)}</div>`;
+  out+=`<div class="card"><h2>Nutrition<span class="sub">${activePhase().name} · tap Fuel to log</span></h2>${macroBlock(t)}</div>`;
   // cardio + steps
   out+=`<div class="card"><h2>Daily Cardio & Steps</h2>
     <div class="togrow"><div class="t-nm">Cardio done<small>low-intensity, after lifting</small></div>
@@ -660,7 +678,7 @@ function keyOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,
 function currentMonday(){ const d=new Date(); const off=(d.getDay()+6)%7; d.setDate(d.getDate()-off); d.setHours(0,0,0,0); return d; }
 function weekKeys(){ const m=currentMonday(); return Array.from({length:7},(_,i)=>{ const d=new Date(m); d.setDate(m.getDate()+i); return keyOf(d); }); }
 function sessionDone(k){ const s=data.dates[k]; return !!(s&&s.sets&&Object.values(s.sets).some(a=>a&&a.some(x=>x&&x.done))); }
-function macrosHit(k){ const t=dayTotals(k); return t.kc>=1850&&t.kc<=2150&&t.p>=150; }
+function macrosHit(k){ const t=dayTotals(k); return t.kc>=TARGET.kc-150&&t.kc<=TARGET.kc+150&&t.p>=TARGET.p-15; }
 function cardioDone(k){ const s=data.dates[k]; return !!(s&&s.cardio); }
 function viewStats(){
   const b=(v,l)=>`<button class="${state.statsView===v?'on':''}" data-act="seg${v}">${l}</button>`;
@@ -690,15 +708,18 @@ function viewTrends(){
   return out;
 }
 function viewProgram(){
-  let out=`<div class="card"><div class="kicker" style="color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Forged by Iron · Recomp</div>
-    <h2 style="margin:6px 0 4px;font-size:18px">Your Program</h2>
-    <div style="font-size:13px;color:var(--mut)">A 5-day split built to bring up delts &amp; arms while holding your V-taper, paired with a gluten-free, gut-friendly, budget meal plan.</div></div>`;
-  out+=`<div class="card"><h2>Daily Targets</h2><div class="tiles">
+  const ph=activePhase();
+  const chips=PHASES.map(p=>`<div class="chip ${p.id===ph.id?'on':''}" data-act="setphase" data-p="${p.id}">${p.name}</div>`).join('');
+  let out=`<div class="chips" style="margin-bottom:10px">${chips}</div>`;
+  out+=`<div class="card"><div class="kicker" style="color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700">Forged by Iron · ${ph.name}</div>
+    <h2 style="margin:6px 0 4px;font-size:18px">${ph.tagline}</h2>
+    <div style="font-size:13px;color:var(--mut)">${ph.desc}</div></div>`;
+  out+=`<div class="card"><h2>Daily Targets<span class="sub">${ph.name}</span></h2><div class="tiles">
     <div class="tile"><div class="big">${TARGET.kc}</div><div class="lab">Calories</div></div>
     <div class="tile"><div class="big">${TARGET.p}<small>g</small></div><div class="lab">Protein</div></div>
     <div class="tile"><div class="big">${TARGET.c}<small>g</small></div><div class="lab">Carbs</div></div>
     <div class="tile"><div class="big">${TARGET.f}<small>g</small></div><div class="lab">Fat</div></div></div>
-    <div style="font-size:11.5px;color:var(--mut);margin-top:10px">Cardio daily · abs Mon/Wed/Fri · calves Tue/Thu · deload every ${data.deloadWeeks||8} weeks.</div></div>`;
+    <div style="font-size:11.5px;color:var(--mut);margin-top:10px">${ph.cardio} · deload every ${data.deloadWeeks||8} weeks.</div></div>`;
   out+=`<div class="sect-title">Training Split</div>`;
   DAYS.forEach((d,i)=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">Day ${i+1} · ${d.name}</div>
     <div class="tg">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises</div></div>${d.priority?'<span class="pill">PRIORITY</span>':''}</div>
@@ -895,7 +916,7 @@ function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
     let pick; if(a&&b){ pick=((b._u||0)>(a._u||0))?Object.assign({},b):Object.assign({},a); } else pick=Object.assign({}, a||b);
     if(a&&a.photos) pick.photos=a.photos; out[k]=pick; });
   data.dates=out;
-  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
+  if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos','phase'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
 }
 let pushTimer=null;
 function schedulePush(){ if(!sync.enabled) return; setSyncDot('sync'); clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ try{ await supPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }, 1600); }
@@ -944,6 +965,7 @@ document.addEventListener('click', e=>{
   else if(a==='segtrends'){ state.statsView='trends'; render(); }
   else if(a==='segprs'){ state.statsView='prs'; render(); }
   else if(a==='quicklog'){ const f=(data.foods||[]).find(x=>x.id===el.dataset.id); if(f){ const s=dstore(); (s.log=s.log||[]).push({name:f.name,p:f.p,c:f.c,f:f.f}); touch(); save(); render(); showToast('Logged '+f.name); } }
+  else if(a==='setphase'){ const p=el.dataset.p; if(PHASES.some(x=>x.id===p)&&p!==data.phase){ data.phase=p; applyPhase(); touchSettings(); save(); render(); showToast('Switched to '+activePhase().name); } }
   else if(a==='didDeload'){ data.blockStart=todayKey(); touchSettings(); save(); render(); showToast('New training block started 💪'); }
   else if(a==='setdeload'){ const n=prompt('Deload every how many weeks? (3–16)', data.deloadWeeks||8); if(n){ const v=parseInt(n,10); if(v>=3&&v<=16){ data.deloadWeeks=v; touchSettings(); save(); render(); } } }
   else if(a==='setrest'){ data.restDefault=+el.dataset.s; touchSettings(); save(); render(); }
