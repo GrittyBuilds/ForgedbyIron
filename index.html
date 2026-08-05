@@ -21,6 +21,7 @@
     --txt:#F4F4F5; --mut:#8B8F96; --gold:#FF6A2C; --blue:#6AA0D8;
     --green:#54C98A; --orange:#E0894B; --pri:#FF8A5C; --red:#C9451A;
     --bone:#ECE7DF; --steel:#C9CCD1; --iron:#3A3F47; --ink:#0A0A0B;
+    --macro-p:#D85A57; --macro-c:#4A8FCE; --macro-f:#2FA97B; --good:var(--green);
     --ember:#FF6A2C; --ember-deep:#C9451A;
     --ember-soft:rgba(255,106,44,.13); --ember-line:rgba(255,106,44,.34);
     --card-grad:linear-gradient(180deg,#17181c,#121214);
@@ -40,16 +41,16 @@
     line-height:1.45;-webkit-font-smoothing:antialiased}
   #app{display:flex;flex-direction:column;height:100%;max-width:520px;margin:0 auto;position:relative}
   /* Header */
-  .top{padding:calc(env(safe-area-inset-top) + 14px) 18px 12px;display:block;position:relative;
+  .top{padding:calc(env(safe-area-inset-top) + 12px) 16px 11px;display:block;position:relative;
     border-bottom:1px solid var(--line);background:linear-gradient(180deg,#17181c,#0A0A0B)}
   .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;
     background:linear-gradient(90deg,transparent,var(--ember),transparent);opacity:.55}
-  .brandbar{display:flex;justify-content:center;align-items:center;gap:13px}
-  .brandbar .brandicon{height:50px;width:50px;flex:none;display:block;filter:drop-shadow(0 2px 7px rgba(0,0,0,.5))}
-  .brandbar .wordmark{height:50px;width:auto;max-width:64vw;object-fit:contain;display:block}
+  .topbar{display:flex;align-items:center;gap:12px}
+  .topbar .brandicon{height:40px;width:40px;flex:none;display:block;border-radius:11px;filter:drop-shadow(0 2px 7px rgba(0,0,0,.5))}
+  .topbar .h{flex:1;min-width:0}
   .hrow{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:10px}
   .hactions{display:flex;align-items:center;gap:7px;flex:none}
-  .top .h h1{margin:0;font-size:20px;letter-spacing:.2px}
+  .top .h h1{margin:0;font-size:21px;line-height:1.1}
   .top .h .d{font-size:12.5px;color:var(--mut);margin-top:2px}
   .iconbtn{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);
     background:var(--card2);color:var(--mut);display:flex;align-items:center;justify-content:center;
@@ -78,6 +79,9 @@
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   /* Cards */
   .card{background:var(--card-grad);border:1px solid var(--line);border-radius:16px;padding:15px 16px;margin-bottom:13px;box-shadow:var(--shadow-card)}
+  .card.tap{cursor:pointer;transition:transform .1s ease,border-color .15s ease}
+  .card.tap:active{transform:scale(.992)}
+  .card.tap .go{margin-left:auto;color:var(--ember);font-weight:700}
   .card h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
   .card h2 .sub{margin-left:auto;font-size:12px;color:var(--mut);font-weight:400}
   .sect-title{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--steel);
@@ -296,11 +300,8 @@
 <body>
 <div id="app">
   <div class="top">
-    <div class="brandbar">
+    <div class="topbar">
       <img class="brandicon" src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTIwIDEyMCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGb3JnZWQgYnkgSXJvbiBhcHAgaWNvbiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImZiaUJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzE4MWExZiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBhMGIwZSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIHJ4PSIyNyIgZmlsbD0idXJsKCNmYmlCZykiLz4KICA8cmVjdCB4PSIxMiIgeT0iMTIiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjIxIiBmaWxsPSJub25lIiBzdHJva2U9IiMyZDMwMzciIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPCEtLSBGIG1vbm9ncmFtIC0tPgogIDxnIGZpbGw9IiNlY2U3ZGYiPgogICAgPHJlY3QgeD0iMzUiIHk9IjMzIiB3aWR0aD0iMTIiIGhlaWdodD0iNTQiIHJ4PSIxLjUiLz4KICAgIDxyZWN0IHg9IjM1IiB5PSIzMyIgd2lkdGg9IjMwIiBoZWlnaHQ9IjEyIiByeD0iMS41Ii8+CiAgICA8cmVjdCB4PSIzNSIgeT0iNTQiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMSIgcng9IjEuNSIvPgogIDwvZz4KICA8IS0tIGJhcmJlbGwgcGxhdGVzIGxvYWRpbmcgdGhlIHRvcCBzdHJva2UgLS0+CiAgPHJlY3QgeD0iNjUiIHk9IjI5IiB3aWR0aD0iNyIgaGVpZ2h0PSIyMCIgcng9IjEuNSIgZmlsbD0iI2VjZTdkZiIvPgogIDxyZWN0IHg9Ijc0IiB5PSIzMS41IiB3aWR0aD0iNSIgaGVpZ2h0PSIxNSIgcng9IjEuNSIgZmlsbD0iI2VjZTdkZiIvPgogIDxyZWN0IHg9IjgxIiB5PSIzNCIgd2lkdGg9IjQiIGhlaWdodD0iMTAiIHJ4PSIxLjUiIGZpbGw9IiNmZjZhMmMiLz4KPC9zdmc+Cg==" alt="Forged by Iron">
-      <img class="wordmark" id="topk" src="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjc1IDEyNCIgd2lkdGg9IjI3NSIgaGVpZ2h0PSIxMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJGb3JnZWQgYnkgSXJvbiB3b3JkbWFyayI+CiAgCiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAsMCkiPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC4wMCw4MC4wMCkgc2NhbGUoMC4wNjQwMCwtMC4wNjQwMCkiIGQ9Ik04MiAwVjczMEgyNDZWMFpNMjI2IDI5NFY0MzBINTA4VjI5NFpNMjI2IDU5NFY3MzBINTIwVjU5NFoiIGZpbGw9IiNlY2U3ZGYiLz4KICAgIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM1Ljg0LDgwLjAwKSBzY2FsZSgwLjA2NDAwLC0wLjA2NDAwKSIgZD0iTTM0MCAtMTlRMjY4IC0xOSAyMTIuMCAzLjVRMTU2IDI2IDExNy41IDY1LjBRNzkgMTA0IDU5LjAgMTU0LjVRMzkgMjA1IDM5IDI2MVYyODRRMzkgMzQxIDU5LjUgMzkyLjVRODAgNDQ0IDExOS41IDQ4My4wUTE1OSA1MjIgMjE1LjAgNTQ0LjVRMjcxIDU2NyAzNDAgNTY3UTQxMSA1NjcgNDY2LjUgNTQ0LjVRNTIyIDUyMiA1NjEuMCA0ODMuMFE2MDAgNDQ0IDYyMS4wIDM5Mi41UTY0MiAzNDEgNjQyIDI4NFYyNjFRNjQyIDIwNSA2MjIuMCAxNTQuNVE2MDIgMTA0IDU2My41IDY1LjBRNTI1IDI2IDQ2OS4wIDMuNVE0MTMgLTE5IDM0MCAtMTlaTTM0MCAxMTZRMzg3IDExNiA0MTguMCAxMzYuMFE0NDkgMTU2IDQ2NS41IDE5Mi4wUTQ4MiAyMjggNDgyIDI3MlE0ODIgMzE5IDQ2NS4wIDM1NC41UTQ0OCAzOTAgNDE2LjUgNDExLjBRMzg1IDQzMiAzNDAgNDMyUTI5NiA0MzIgMjY0LjAgNDExLjBRMjMyIDM5MCAyMTUuNSAzNTQuNVExOTkgMzE5IDE5OSAyNzJRMTk5IDIyOCAyMTUuMCAxOTIuMFEyMzEgMTU2IDI2My4wIDEzNi4wUTI5NSAxMTYgMzQwIDExNloiIGZpbGw9IiNlY2U3ZGYiLz4KICAgIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDc5LjQyLDgwLjAwKSBzY2FsZSgwLjA2NDAwLC0wLjA2NDAwKSIgZD0iTTczIDBWNTQ4SDIwMFYzMTNIMTk3UTE5NyA0MjkgMjQ2LjUgNDkyLjBRMjk2IDU1NSAzOTAgNTU1SDQxMVY0MTdIMzcxUTMwNSA0MTcgMjY5LjAgMzgxLjVRMjMzIDM0NiAyMzMgMjc5VjBaIiBmaWxsPSIjZWNlN2RmIi8+CiAgICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDYuMzcsODAuMDApIHNjYWxlKDAuMDY0MDAsLTAuMDY0MDApIiBkPSJNMjg5IC0yMThRMjQ5IC0yMTggMjA3LjAgLTIxNS4wUTE2NSAtMjEyIDEzMCAtMjA3Vi03MlExNjUgLTc3IDIwNy41IC04MC41UTI1MCAtODQgMjg1IC04NFEzNTAgLTg0IDM5MC41IC02OS4wUTQzMSAtNTQgNDUwLjAgLTIzLjVRNDY5IDcgNDY5IDU1VjE2NEw0OTggMjI4UTQ5NiAxNTUgNDY5LjUgMTAzLjBRNDQzIDUxIDM5Ni4wIDIzLjVRMzQ5IC00IDI4NCAtNFEyMjggLTQgMTgyLjUgMTYuNVExMzcgMzcgMTA1LjAgNzQuMFE3MyAxMTEgNTYuMCAxNjAuNVEzOSAyMTAgMzkgMjY4VjI5MVEzOSAzNDkgNTcuMCAzOTkuMFE3NSA0NDkgMTA5LjAgNDg2LjBRMTQzIDUyMyAxOTAuMCA1NDMuNVEyMzcgNTY0IDI5NCA1NjRRMzYwIDU2NCA0MDguNSA1MzUuMFE0NTcgNTA2IDQ4NS4wIDQ1MC4wUTUxMyAzOTQgNTE1IDMxNUw0OTMgMzA5VjU0OEg2MjBWNjVRNjIwIC0zNiA1ODQuMCAtOTguMFE1NDggLTE2MCA0NzQuNSAtMTg5LjBRNDAxIC0yMTggMjg5IC0yMThaTTMzNCAxMzFRMzcxIDEzMSA0MDEuMCAxNDcuNVE0MzEgMTY0IDQ0OC41IDE5NS4wUTQ2NiAyMjYgNDY2IDI3MFYyOTlRNDY2IDM0MiA0NDcuNSAzNzEuNVE0MjkgNDAxIDM5OS4wIDQxNi41UTM2OSA0MzIgMzM1IDQzMlEyOTUgNDMyIDI2NC4wIDQxMy4wUTIzMyAzOTQgMjE2LjAgMzYwLjBRMTk5IDMyNiAxOTkgMjgwUTE5OSAyMzMgMjE2LjUgMTk5LjVRMjM0IDE2NiAyNjQuNSAxNDguNVEyOTUgMTMxIDMzNCAxMzFaIiBmaWxsPSIjZWNlN2RmIi8+CiAgICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNTAuMjcsODAuMDApIHNjYWxlKDAuMDY0MDAsLTAuMDY0MDApIiBkPSJNMzI0IC0xOVEyNTQgLTE5IDIwMC41IDUuMFExNDcgMjkgMTExLjUgNjkuNVE3NiAxMTAgNTcuNSAxNjAuNVEzOSAyMTEgMzkgMjY0VjI4NFEzOSAzMzkgNTcuNSAzODkuNVE3NiA0NDAgMTExLjAgNDgwLjBRMTQ2IDUyMCAxOTguNSA1NDMuNVEyNTEgNTY3IDMxOCA1NjdRNDA2IDU2NyA0NjYuNSA1MjcuNVE1MjcgNDg4IDU1OS4wIDQyNC41UTU5MSAzNjEgNTkxIDI4NlYyMzJIMTA2VjMyM0g0OTRMNDQyIDI4MVE0NDIgMzMwIDQyOC4wIDM2NS4wUTQxNCA0MDAgMzg2LjUgNDE4LjVRMzU5IDQzNyAzMTggNDM3UTI3NiA0MzcgMjQ3LjAgNDE4LjBRMjE4IDM5OSAyMDMuMCAzNjIuNVExODggMzI2IDE4OCAyNzNRMTg4IDIyNCAyMDIuMCAxODcuNVEyMTYgMTUxIDI0Ni4wIDEzMS4wUTI3NiAxMTEgMzI0IDExMVEzNjggMTExIDM5Ni4wIDEyOC4wUTQyNCAxNDUgNDM0IDE3MEg1ODFRNTY5IDExNSA1MzQuMCA3Mi4wUTQ5OSAyOSA0NDYuMCA1LjBRMzkzIC0xOSAzMjQgLTE5WiIgZmlsbD0iI2VjZTdkZiIvPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTkwLjIxLDgwLjAwKSBzY2FsZSgwLjA2NDAwLC0wLjA2NDAwKSIgZD0iTTI5OSAtMThRMjQxIC0xOCAxOTMuNSAzLjBRMTQ2IDI0IDExMS4wIDYxLjVRNzYgOTkgNTcuNSAxNTAuMFEzOSAyMDEgMzkgMjYwVjI4M1EzOSAzNDIgNTYuNSAzOTMuMFE3NCA0NDQgMTA3LjUgNDgyLjVRMTQxIDUyMSAxODguMCA1NDIuNVEyMzUgNTY0IDI5MyA1NjRRMzU5IDU2NCA0MDcuMCA1MzUuNVE0NTUgNTA3IDQ4Mi4wIDQ1MS41UTUwOSAzOTYgNTEyIDMxNUw0NzAgMzU0VjczMEg2MzFWMEg1MDRWMjI3SDUyNlE1MjMgMTQ5IDQ5My41IDk0LjBRNDY0IDM5IDQxNC4wIDEwLjVRMzY0IC0xOCAyOTkgLTE4Wk0zMzkgMTE2UTM3NiAxMTYgNDA2LjUgMTMyLjVRNDM3IDE0OSA0NTUuNSAxODEuMFE0NzQgMjEzIDQ3NCAyNThWMjk1UTQ3NCAzMzkgNDU1LjAgMzY5LjBRNDM2IDM5OSA0MDUuMCA0MTUuMFEzNzQgNDMxIDMzOCA0MzFRMjk4IDQzMSAyNjYuNSA0MTAuNVEyMzUgMzkwIDIxNy4wIDM1NC41UTE5OSAzMTkgMTk5IDI3MlExOTkgMjI0IDIxNy4wIDE4OS4wUTIzNSAxNTQgMjY3LjAgMTM1LjBRMjk5IDExNiAzMzkgMTE2WiIgZmlsbD0iI2VjZTdkZiIvPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC4wMCwxMTIuMDApIHNjYWxlKDAuMDIwMDAsLTAuMDIwMDApIiBkPSJNMTcxIC0zVjY0SDM4NVE0NTAgNjQgNDg2LjUgMTAxLjVRNTIzIDEzOSA1MjMgMjAxUTUyMyAyNjIgNDg3LjAgMjk5LjVRNDUxIDMzNyAzODUgMzM3SDE3MVYzODdIMzc0UTQ0MCAzODcgNDkxLjAgMzY4LjVRNTQyIDM1MCA1NzEuMCAzMTAuMFE2MDAgMjcwIDYwMCAyMDVWMTkzUTYwMCAxMzQgNTc1LjAgODkuNVE1NTAgNDUgNTAwLjAgMjEuMFE0NTAgLTMgMzc0IC0zWk0xMTQgLTNWNzMzSDE5MFYtM1pNMTcxIDM1MVY0MDFIMzU4UTQyNyA0MDEgNDYwLjAgNDM4LjVRNDkzIDQ3NiA0OTMgNTMzUTQ5MyA1OTIgNDYwLjAgNjI5LjBRNDI3IDY2NiAzNTggNjY2SDE3MVY3MzNIMzQ1UTQ1OCA3MzMgNTE0LjAgNjgyLjBRNTcwIDYzMSA1NzAgNTQxVjUyOVE1NzAgNDY2IDU0Mi4wIDQyNi41UTUxNCAzODcgNDYzLjUgMzY5LjBRNDEzIDM1MSAzNDUgMzUxWiIgZmlsbD0iI2E3YWRiNiIvPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAuMjYsMTEyLjAwKSBzY2FsZSgwLjAyMDAwLC0wLjAyMDAwKSIgZD0iTTI1NiAyODYgMjEgNzMwSDEwMUwzMDggMzMzTDI3NiAzNDZIMzg3TDM1NCAzMzNMNTUwIDczMEg2MjVMNDA0IDI4NlpNMjkyIDBWMzAzSDM2N1YwWiIgZmlsbD0iI2E3YWRiNiIvPgogICAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTEuNTAsMTEyLjAwKSBzY2FsZSgwLjAyMDAwLC0wLjAyMDAwKSIgZD0iTTExNiAwVjczMEgxOTJWMFoiIGZpbGw9IiNhN2FkYjYiLz4KICAgIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDY0LjQ2LDExMi4wMCkgc2NhbGUoMC4wMjAwMCwtMC4wMjAwMCkiIGQ9Ik0xMTQgMFY3MzNIMTkwVjBaTTU2NyAwIDMxOCAzMjNINDA3TDY2MCAwWk0xNTkgMjc3VjM0NUgzNTVRNDA5IDM0NSA0NDUuMCAzNjYuMFE0ODEgMzg3IDQ5OS4wIDQyMy4wUTUxNyA0NTkgNTE3IDUwNVE1MTcgNTUxIDQ5OS4wIDU4Ny4wUTQ4MSA2MjMgNDQ1LjAgNjQ0LjVRNDA5IDY2NiAzNTUgNjY2SDE1OVY3MzNIMzQyUTQyMyA3MzMgNDc5LjUgNzA3LjVRNTM2IDY4MiA1NjUuNSA2MzIuNVE1OTUgNTgzIDU5NSA1MTJWNDk4UTU5NSA0MjcgNTY1LjAgMzc3LjVRNTM1IDMyOCA0NzkuMCAzMDIuNVE0MjMgMjc3IDM0MiAyNzdaIiBmaWxsPSIjYTdhZGI2Ii8+CiAgICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4NS4wMCwxMTIuMDApIHNjYWxlKDAuMDIwMDAsLTAuMDIwMDApIiBkPSJNNDM0IC0xN1EzMzkgLTE3IDI2OS4wIDE3LjBRMTk5IDUxIDE1My4wIDEwNy4wUTEwNyAxNjMgODQuMCAyMjkuMFE2MSAyOTUgNjEgMzU4VjM3NlE2MSA0NDMgODQuNSA1MDkuNVExMDggNTc2IDE1NS4wIDYzMC4wUTIwMiA2ODQgMjcyLjAgNzE2LjVRMzQyIDc0OSA0MzQgNzQ5UTUyNyA3NDkgNTk2LjUgNzE2LjVRNjY2IDY4NCA3MTMuMCA2MzAuMFE3NjAgNTc2IDc4My41IDUwOS41UTgwNyA0NDMgODA3IDM3NlYzNTdRODA3IDI5NCA3ODQuNSAyMjguNVE3NjIgMTYzIDcxNS41IDEwNy4wUTY2OSA1MSA1OTkuMCAxNy4wUTUyOSAtMTcgNDM0IC0xN1pNNDM0IDUzUTUwNCA1MyA1NTkuMCA3OC41UTYxNCAxMDQgNjUyLjAgMTQ4LjVRNjkwIDE5MyA3MTAuMCAyNDkuMFE3MzAgMzA1IDczMCAzNjZRNzMwIDQzMCA3MTAuMCA0ODYuMFE2OTAgNTQyIDY1MS41IDU4NS41UTYxMyA2MjkgNTU4LjAgNjU0LjBRNTAzIDY3OSA0MzQgNjc5UTM2NiA2NzkgMzExLjAgNjU0LjBRMjU2IDYyOSAyMTcuNSA1ODUuNVExNzkgNTQyIDE1OC41IDQ4Ni4wUTEzOCA0MzAgMTM4IDM2NlExMzggMzA1IDE1OC4wIDI0OS4wUTE3OCAxOTMgMjE2LjAgMTQ4LjVRMjU0IDEwNCAzMDkuNSA3OC41UTM2NSA1MyA0MzQgNTNaIiBmaWxsPSIjYTdhZGI2Ii8+CiAgICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMDkuMTQsMTEyLjAwKSBzY2FsZSgwLjAyMDAwLC0wLjAyMDAwKSIgZD0iTTExNCAwVjczMEgyNDFMNjQxIDY5SDY3M0w2NTMgNTNWNzMwSDcyNlYwSDU5OEwxOTggNjYxSDE2NkwxODYgNjc3VjBaIiBmaWxsPSIjYTdhZGI2Ii8+CiAgPC9nPgo8L3N2Zz4K" alt="Forged by Iron">
-    </div>
-    <div class="hrow">
       <div class="h">
         <h1 id="toph">Today</h1>
         <div class="d" id="topd"></div>
@@ -674,7 +675,7 @@ function applyPhase(){ const t=effectiveTarget(activePhase().id); TARGET.kc=t.kc
 /* Rotation pointer is per phase, so switching phases keeps each split's place. */
 function getRot(){ const sp=curSplit(), id=activePhase().id; let v=(data&&data.rotationByPhase&&data.rotationByPhase[id]); v=parseInt(v,10); if(isNaN(v)||v<0) v=0; if(v>=sp.length) v=v%sp.length; return v; }
 function setRot(i){ const sp=curSplit(), id=activePhase().id; i=((i%sp.length)+sp.length)%sp.length; (data.rotationByPhase=data.rotationByPhase||{})[id]=i; }
-const MC = {kc:'var(--gold)', p:'var(--red)', c:'var(--blue)', f:'var(--green)'};
+const MC = {kc:'var(--ember)', p:'var(--macro-p)', c:'var(--macro-c)', f:'var(--macro-f)'};
 
 /* ---------------- STORAGE (with graceful fallback) ---------------- */
 const KEY='cp_tracker_v1';
@@ -746,10 +747,12 @@ function bar(cur,goal,color){ const pct=Math.min(100, goal? Math.round(cur/goal*
 function ringSVG(cur,goal){
   const r=52,c=2*Math.PI*r,pct=Math.min(1, goal?cur/goal:0),off=c*(1-pct);
   return `<svg width="120" height="120" viewBox="0 0 120 120">
+    <defs><linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF8A4C"/><stop offset="1" stop-color="#DA4E17"/></linearGradient></defs>
     <circle cx="60" cy="60" r="${r}" stroke="#26282D" stroke-width="10" fill="none"/>
-    <circle cx="60" cy="60" r="${r}" stroke="var(--gold)" stroke-width="10" fill="none"
+    <circle cx="60" cy="60" r="${r}" stroke="url(#ringG)" stroke-width="10" fill="none"
       stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
-      transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .4s"/></svg>`;
+      transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .5s ease;filter:drop-shadow(0 0 5px rgba(255,106,44,.35))"/></svg>`;
 }
 function macroBlock(t){
   return `<div class="ringwrap">
@@ -826,7 +829,7 @@ function viewToday(){
     out+=`</div>`; }
   } // end today-only widgets
   // macros
-  out+=`<div class="card"><h2>Nutrition<span class="sub">${activePhase().name} · tap Fuel to log</span></h2>${macroBlock(t)}</div>`;
+  out+=`<div class="card tap" data-act="nav" data-tab="fuel"><h2>Nutrition<span class="sub">${activePhase().name}</span><span class="go">Log ›</span></h2>${macroBlock(t)}</div>`;
   // cardio + steps
   out+=`<div class="card"><h2>Daily Cardio & Steps</h2>
     <div class="togrow"><div class="t-nm">Cardio done<small>low-intensity, after lifting</small></div>
@@ -933,9 +936,13 @@ function chartSVG(entries){
   const x=i=>pad+(i/(pts.length-1))*(W-pad*2);
   const y=v=>H-pad-((v-min)/rng)*(H-pad*2);
   let d=''; pts.forEach((p,i)=>{ d+=(i?'L':'M')+x(i).toFixed(1)+' '+y(p.v).toFixed(1)+' '; });
-  const dots=pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3" fill="var(--gold)"/>`).join('');
+  const area=d+`L ${x(pts.length-1).toFixed(1)} ${H-pad} L ${x(0).toFixed(1)} ${H-pad} Z`;
+  const dots=pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="3.2" fill="var(--ember)"/>`).join('');
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-    <path d="${d}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round"/>${dots}
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--ember)" stop-opacity=".26"/><stop offset="1" stop-color="var(--ember)" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#wg)" stroke="none"/>
+    <path d="${d}" fill="none" stroke="var(--ember)" stroke-width="2.25" stroke-linejoin="round"/>${dots}
     <text x="${pad}" y="14" fill="var(--mut)" font-size="11">${max.toFixed(1)}</text>
     <text x="${pad}" y="${H-6}" fill="var(--mut)" font-size="11">${min.toFixed(1)}</text></svg>`;
 }
