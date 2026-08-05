@@ -1,40 +1,47 @@
-FORGED BY IRON — BRAND ASSET KIT
-================================
+FORGED BY IRON — BRAND KIT (v2 · "Loaded" hallmark)
+====================================================
 
-PRIMARY LOGO
-  svg/forged-by-iron-lockup-horizontal-dark.svg   ← primary, use on dark UI
-  svg/forged-by-iron-lockup-horizontal-light.svg  ← use on light backgrounds
-  png/lockup-horizontal-dark@2x.png / @3x.png
-  png/lockup-horizontal-light@2x.png
+WHAT'S INSIDE
+-------------
+forged-by-iron-brandsheet.html   The brand sheet (open in any browser).
 
-WORDMARK ONLY (no icon)
-  svg/forged-by-iron-wordmark-dark.svg  /  -light.svg
-  png/wordmark-dark@2x.png / @3x.png  /  wordmark-light@2x.png
+svg/
+  icon.svg            App icon, full colour, rounded (transparent outside the corners).
+  icon-full.svg       App icon, full colour, SQUARE full-bleed (use for app stores).
+  icon-mono.svg       Single-colour mark (uses currentColor — set the CSS/fill colour).
+  lockup-dark.svg     Icon + wordmark for dark backgrounds. Text is OUTLINED (no fonts needed).
+  lockup-light.svg    Icon + wordmark for light backgrounds. Text outlined.
+  wordmark-dark.svg   Wordmark only, on dark. Text outlined.
+  wordmark-light.svg  Wordmark only, on light. Text outlined.
 
-ICON / SYMBOL
-  svg/forged-by-iron-icon.svg         ← rounded corners (web, marketing)
-  svg/forged-by-iron-icon-square.svg  ← full-bleed square (app stores)
-  app-icons/ios/        iOS PNGs, opaque, squared (Apple applies the mask)
-  app-icons/android/    Android density buckets + 512 Play Store
-  app-icons/icon-rounded-*.png  transparent rounded corners for web/favicon
+png/
+  ios/        AppIcon-*.png  — full-bleed squares (20–1024). Submit the 1024 to App Store;
+              iOS applies the rounded mask automatically, so these are intentionally square.
+  android/    ic_launcher-*.png — 48–192 launcher sizes + 512 for the Play Store.
+  web/        icon-*.png — rounded, transparent: 512, 192, 180 (apple-touch), 32, 16 (favicon).
 
-PALETTE
-  Ink / background   #0A0A0B
-  Ember (primary)    #FF6A00
-  Ember highlight    #FFAB40
-  Flame red          #E0301E
-  Steel (text)       #C9CCD1
-  Steel dim          #8B8F96
+COLOURS
+-------
+Ink        #0A0A0B      Panel      #141416
+Bone       #ECE7DF      Iron       #3A3F47
+Ember      #FF6A2C      Ember Deep #C9451A
+Steel      #C9CCD1      Ash        #8B8F96
 
-TYPE
-  Display  : Anton               (the FORGED wordmark)
-  Bar text : Bebas Neue          (BY IRON)
-  Tagline  : Oswald Medium       (STRENGTH · FORGED · DAILY)
-  All three are free, open-source (SIL OFL) — safe to ship in-app.
+Ember is the single accent — use sparingly. Bone is the logo/text on dark; ink (#161617) on light.
 
-NOTES
-  • All SVG text is converted to vector outlines — no fonts required to render.
-  • Keep clear space around the logo equal to the height of the ember bar.
-  • Don't recolor the flame, stretch the lockup, or place the dark logo on busy photos.
+TYPE (both free, SIL Open Font License)
+---------------------------------------
+Display / headings   Sora  (Bold 700)
+Lockup subline       Sora  (Light 300, tracked +0.44em)
+Body & UI            Inter
 
-Generated for Rob · Forged by Iron
+The lockup and wordmark SVGs have the type converted to vector outlines, so they render
+anywhere without the fonts installed. For live app UI, load Sora + Inter from Google Fonts
+or @fontsource.
+
+USAGE
+-----
+Do:  keep clear space around the mark; scale the lockup proportionally; keep the ember
+     collar as the only warm accent.
+Don't: recolour the F or plates, skew/stretch, add shadows to the wordmark, drop the
+     plates off the top stroke, or place the bone logo on busy/low-contrast backgrounds.

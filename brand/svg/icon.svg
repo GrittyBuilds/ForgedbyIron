@@ -1,0 +1,19 @@
+<svg viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Forged by Iron app icon">
+  <defs>
+    <linearGradient id="fbiBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#181a1f"/><stop offset="1" stop-color="#0a0b0e"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="27" fill="url(#fbiBg)"/>
+  <rect x="12" y="12" width="96" height="96" rx="21" fill="none" stroke="#2d3037" stroke-width="1.5"/>
+  <!-- F monogram -->
+  <g fill="#ece7df">
+    <rect x="35" y="33" width="12" height="54" rx="1.5"/>
+    <rect x="35" y="33" width="30" height="12" rx="1.5"/>
+    <rect x="35" y="54" width="22" height="11" rx="1.5"/>
+  </g>
+  <!-- barbell plates loading the top stroke -->
+  <rect x="65" y="29" width="7" height="20" rx="1.5" fill="#ece7df"/>
+  <rect x="74" y="31.5" width="5" height="15" rx="1.5" fill="#ece7df"/>
+  <rect x="81" y="34" width="4" height="10" rx="1.5" fill="#ff6a2c"/>
+</svg>
