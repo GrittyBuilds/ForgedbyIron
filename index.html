@@ -863,17 +863,32 @@ function initLock(){
   else if(!data.lockSkipped){ lockMode='create'; buf=''; firstPin=''; showLock(); }
 }
 
-/* ---------------- CLOUD SYNC (GitHub Gist) ---------------- */
-const GIST_FILE='cp-tracker-data.json', GH='https://api.github.com';
-function loadSync(){ try{ const r=localStorage.getItem('cp_sync'); if(r) return JSON.parse(r); }catch(e){} return {enabled:false,token:'',gistId:'',user:'',last:0}; }
-function saveSync(){ try{ localStorage.setItem('cp_sync', JSON.stringify(sync)); }catch(e){} }
-function ghHeaders(){ return {'Authorization':'Bearer '+sync.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}; }
+/* ---------------- CLOUD SYNC (Supabase) ----------------
+   One JSON blob per user in the `tracker_data` table, protected by
+   Row-Level Security. Auth is email + password via the GoTrue REST API;
+   data goes through PostgREST. No external library — plain fetch, so the
+   app stays a single self-contained file. Config (project URL + anon key
+   + session tokens) is stored only on this device. */
+const SB_ROW='tracker_data';
+function syncDefault(){ return {enabled:false,url:'',anonKey:'',email:'',token:'',refresh:'',userId:'',last:0}; }
+function loadSync(){ try{ const r=localStorage.getItem('sb_sync'); if(r){ const o=JSON.parse(r); if(o&&typeof o==='object'&&'url'in o) return Object.assign(syncDefault(),o); } }catch(e){} return syncDefault(); }
+function saveSync(){ try{ localStorage.setItem('sb_sync', JSON.stringify(sync)); }catch(e){} }
 function syncPayload(){ const d=JSON.parse(JSON.stringify(data)); Object.keys(d.dates||{}).forEach(k=>{ if(d.dates[k]) delete d.dates[k].photos; }); return JSON.stringify(d); }
-async function ghUser(){ const r=await fetch(GH+'/user',{headers:ghHeaders()}); if(!r.ok) throw 0; return (await r.json()).login; }
-async function ghFind(){ const r=await fetch(GH+'/gists?per_page=100',{headers:ghHeaders()}); if(!r.ok) throw 0; const a=await r.json(); const g=(a||[]).find(x=>x.files&&x.files[GIST_FILE]); return g?g.id:''; }
-async function ghCreate(){ const r=await fetch(GH+'/gists',{method:'POST',headers:ghHeaders(),body:JSON.stringify({description:'Forged by Iron data (private)',public:false,files:{[GIST_FILE]:{content:syncPayload()}}})}); if(!r.ok) throw 0; return (await r.json()).id; }
-async function ghPush(){ if(!sync.gistId) return; const r=await fetch(GH+'/gists/'+sync.gistId,{method:'PATCH',headers:ghHeaders(),body:JSON.stringify({files:{[GIST_FILE]:{content:syncPayload()}}})}); if(!r.ok) throw 0; }
-async function ghPull(){ if(!sync.gistId) return null; const r=await fetch(GH+'/gists/'+sync.gistId,{headers:ghHeaders()}); if(!r.ok) throw 0; const j=await r.json(); const f=j.files&&j.files[GIST_FILE]; if(!f) return null; let c=f.content; if(f.truncated&&f.raw_url){ const rr=await fetch(f.raw_url); c=await rr.text(); } try{ return JSON.parse(c); }catch(e){ return null; } }
+/* Auth (GoTrue) */
+async function supAuth(path,body){ const r=await fetch(sync.url+'/auth/v1/'+path,{method:'POST',headers:{'apikey':sync.anonKey,'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json().catch(()=>({})); return {ok:r.ok,status:r.status,j}; }
+function supSetSession(j){ sync.token=j.access_token; sync.refresh=j.refresh_token||sync.refresh; sync.userId=(j.user&&j.user.id)||sync.userId; if(j.user&&j.user.email) sync.email=j.user.email; }
+async function supSignIn(email,password){ const {ok,j}=await supAuth('token?grant_type=password',{email,password}); if(!ok||!j.access_token) throw (j.error_description||j.msg||j.message||'Sign-in failed'); sync.email=email; supSetSession(j); }
+async function supSignUp(email,password){ const {ok,j}=await supAuth('signup',{email,password}); if(!ok) throw (j.error_description||j.msg||j.message||'Sign-up failed'); sync.email=email; if(j.access_token){ supSetSession(j); return {session:true}; } return {session:false}; }
+async function supRefresh(){ try{ const {ok,j}=await supAuth('token?grant_type=refresh_token',{refresh_token:sync.refresh}); if(ok&&j.access_token){ supSetSession(j); saveSync(); return true; } }catch(e){} return false; }
+/* Data (PostgREST) — retries once through a token refresh on 401 */
+async function supFetch(path,opts,_retry){ opts=opts||{};
+  const h=Object.assign({'apikey':sync.anonKey,'Authorization':'Bearer '+sync.token}, opts.headers||{});
+  const r=await fetch(sync.url+path, Object.assign({},opts,{headers:h}));
+  if(r.status===401 && !_retry && sync.refresh){ if(await supRefresh()) return supFetch(path,opts,true); }
+  return r; }
+async function supPull(){ const r=await supFetch('/rest/v1/'+SB_ROW+'?select=payload&limit=1',{headers:{'Accept':'application/json'}}); if(!r.ok) throw 0; const a=await r.json(); return (Array.isArray(a)&&a.length&&a[0].payload)?a[0].payload:null; }
+async function supPush(){ if(!sync.userId) return; const body=[{user_id:sync.userId, payload:JSON.parse(syncPayload()), updated_at:new Date().toISOString()}];
+  const r=await supFetch('/rest/v1/'+SB_ROW,{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)}); if(!r.ok) throw 0; }
 function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
   const rd=remote.dates||{}, ld=data.dates||{}, out={};
   new Set([...Object.keys(ld),...Object.keys(rd)]).forEach(k=>{ const a=ld[k], b=rd[k];
@@ -883,26 +898,30 @@ function mergeRemote(remote){ if(!remote||typeof remote!=='object') return;
   if((remote.updatedAt||0)>(data.updatedAt||0)){ ['unit','restDefault','deloadWeeks','blockStart','pinHash','lockSkipped','foods','rotationPos'].forEach(f=>{ if(remote[f]!==undefined) data[f]=remote[f]; }); data.updatedAt=remote.updatedAt; }
 }
 let pushTimer=null;
-function schedulePush(){ if(!sync.enabled) return; setSyncDot('sync'); clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ try{ await ghPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }, 1600); }
-async function startupSync(){ if(!(sync.enabled&&sync.token&&sync.gistId)) return; setSyncDot('sync'); try{ const remote=await ghPull(); if(remote){ mergeRemote(remote); persistLocal(); render(); } sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }
+function schedulePush(){ if(!sync.enabled) return; setSyncDot('sync'); clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ try{ await supPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }, 1600); }
+async function startupSync(){ if(!(sync.enabled&&sync.token&&sync.userId)) return; setSyncDot('sync'); try{ const remote=await supPull(); if(remote){ mergeRemote(remote); persistLocal(); render(); } await supPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); }catch(e){ setSyncDot('err'); } }
 function setSyncDot(s){ const el=document.getElementById('syncDot'); if(!el) return; if(!sync.enabled){ el.style.display='none'; return; } el.style.display='block'; el.className='sync-dot '+(s||'ok'); }
 function syncSheet(){
   if(sync.enabled){ openSheet(`<h3>Cloud Sync</h3>
-    <div style="font-size:13px;color:var(--mut);text-align:center;margin-bottom:4px">Connected as <b style="color:var(--txt)">${sync.user||'GitHub'}</b>. Your log syncs to a private gist across all your devices.</div>
+    <div style="font-size:13px;color:var(--mut);text-align:center;margin-bottom:4px">Signed in as <b style="color:var(--txt)">${esc(sync.email||'Supabase')}</b>. Your log syncs across all your devices.</div>
     <div style="font-size:11.5px;color:var(--mut);text-align:center;margin-bottom:14px">Last synced ${sync.last?timeAgo(sync.last):'not yet'}</div>
     <button class="btn" data-act="syncnow">↻ Sync now</button>
-    <button class="btn ghost" style="color:var(--red);margin-top:10px" data-act="syncoff">Disconnect sync</button>`);
+    <button class="btn ghost" style="color:var(--red);margin-top:10px" data-act="syncoff">Sign out & disconnect</button>`);
   } else { openSheet(`<h3>Set Up Cloud Sync</h3>
-    <div style="font-size:12.5px;color:var(--mut);line-height:1.55;margin-bottom:10px">Sync your log across phone and computer using a private GitHub gist. Your token is saved only on this device — never in the public site.</div>
-    <ol style="font-size:12.5px;color:var(--mut);line-height:1.7;padding-left:18px;margin:0 0 12px">
-      <li>Open <b style="color:var(--txt)">github.com/settings/tokens</b> → Generate new token (classic)</li>
-      <li>Tick only the <b style="color:var(--txt)">gist</b> scope, create it, and copy it</li>
-      <li>Paste it below and tap Connect</li></ol>
-    <input class="field" id="ghtok" placeholder="Paste GitHub token" autocomplete="off" style="margin-bottom:10px">
-    <button class="btn green" data-act="syncconnect">Connect</button>
+    <div style="font-size:12.5px;color:var(--mut);line-height:1.55;margin-bottom:10px">Sync your log across phone and computer with your own <b style="color:var(--txt)">Supabase</b> project. Your keys and sign-in are saved only on this device.</div>
+    <div style="font-size:11.5px;color:var(--mut);line-height:1.6;margin-bottom:11px">Find your <b style="color:var(--txt)">Project URL</b> and <b style="color:var(--txt)">anon public key</b> in Supabase → Project Settings → API.</div>
+    <input class="field" id="supurl" placeholder="Project URL (https://xxxx.supabase.co)" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(sync.url||'')}" style="margin-bottom:9px">
+    <input class="field" id="supkey" placeholder="anon public key" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(sync.anonKey||'')}" style="margin-bottom:9px">
+    <input class="field" id="supemail" type="email" placeholder="Email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(sync.email||'')}" style="margin-bottom:9px">
+    <input class="field" id="suppass" type="password" placeholder="Password" autocomplete="current-password" style="margin-bottom:11px">
+    <button class="btn green" data-act="syncconnect">Sign in & connect</button>
+    <button class="btn ghost" style="margin-top:9px" data-act="syncsignup">Create account</button>
     <div id="syncmsg" style="font-size:12px;color:var(--mut);text-align:center;margin-top:10px"></div>`);
   }
 }
+function supReadForm(){ return { url:val('supurl').trim().replace(/\/+$/,''), key:val('supkey').trim(), email:val('supemail').trim(), pass:val('suppass') }; }
+function supMsg(t){ const m=document.getElementById('syncmsg'); if(m) m.textContent=t; }
+async function supFinishConnect(){ const remote=await supPull(); if(remote) mergeRemote(remote); sync.enabled=true; sync.last=nowMs(); saveSync(); persistLocal(); await supPush(); saveSync(); setSyncDot('ok'); closeSheet(); render(); }
 
 /* ---------------- EVENTS ---------------- */
 document.addEventListener('click', e=>{
@@ -956,11 +975,14 @@ document.addEventListener('click', e=>{
   else if(a==='rmpin'){ if(confirm('Remove the PIN lock? The app will open without a code.')){ delete data.pinHash; data.lockSkipped=true; touchSettings(); save(); } closeSheet(); }
   else if(a==='setview'){ data.viewMode=el.dataset.v; touchSettings(); save(); applyViewMode(); menuSheet(); }
   else if(a==='syncsetup'){ syncSheet(); }
-  else if(a==='syncconnect'){ const tok=val('ghtok').trim(); const msg=document.getElementById('syncmsg'); if(!tok){ if(msg) msg.textContent='Paste your token first.'; return; } sync.token=tok; if(msg) msg.textContent='Connecting…';
-    (async()=>{ try{ sync.user=await ghUser(); let gid=await ghFind(); if(gid){ sync.gistId=gid; const remote=await ghPull(); if(remote) mergeRemote(remote); } else { sync.gistId=await ghCreate(); } sync.enabled=true; sync.last=nowMs(); saveSync(); persistLocal(); await ghPush(); setSyncDot('ok'); closeSheet(); render(); showToast('Cloud sync connected ✓'); }
-      catch(e){ sync.token=''; sync.enabled=false; const m=document.getElementById('syncmsg'); if(m) m.textContent='Could not connect — make sure the token has the gist scope.'; setSyncDot('err'); } })(); }
-  else if(a==='syncnow'){ closeSheet(); setSyncDot('sync'); (async()=>{ try{ const remote=await ghPull(); if(remote){ mergeRemote(remote); persistLocal(); render(); } await ghPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); showToast('Synced ✓'); }catch(e){ setSyncDot('err'); showToast('Sync failed — try again'); } })(); }
-  else if(a==='syncoff'){ if(confirm('Disconnect cloud sync? Your data stays on this device.')){ sync={enabled:false,token:'',gistId:'',user:'',last:0}; saveSync(); setSyncDot(); closeSheet(); } }
+  else if(a==='syncconnect'){ const f=supReadForm(); if(!f.url||!f.key||!f.email||!f.pass){ supMsg('Fill in all fields.'); return; } sync.url=f.url; sync.anonKey=f.key; supMsg('Signing in…');
+    (async()=>{ try{ await supSignIn(f.email,f.pass); await supFinishConnect(); showToast('Cloud sync connected ✓'); }
+      catch(e){ sync.enabled=false; sync.token=''; saveSync(); supMsg(typeof e==='string'?e:'Could not connect — check the URL, key, and password.'); setSyncDot('err'); } })(); }
+  else if(a==='syncsignup'){ const f=supReadForm(); if(!f.url||!f.key||!f.email||!f.pass){ supMsg('Fill in all fields.'); return; } sync.url=f.url; sync.anonKey=f.key; supMsg('Creating account…');
+    (async()=>{ try{ const r=await supSignUp(f.email,f.pass); if(!r.session){ supMsg('Account created — check your email to confirm, then Sign in.'); return; } await supFinishConnect(); showToast('Account created & synced ✓'); }
+      catch(e){ sync.enabled=false; sync.token=''; saveSync(); supMsg(typeof e==='string'?e:'Could not create account — check the URL and key.'); setSyncDot('err'); } })(); }
+  else if(a==='syncnow'){ closeSheet(); setSyncDot('sync'); (async()=>{ try{ const remote=await supPull(); if(remote){ mergeRemote(remote); persistLocal(); render(); } await supPush(); sync.last=nowMs(); saveSync(); setSyncDot('ok'); showToast('Synced ✓'); }catch(e){ setSyncDot('err'); showToast('Sync failed — try again'); } })(); }
+  else if(a==='syncoff'){ if(confirm('Sign out and disconnect sync? Your data stays on this device.')){ sync=syncDefault(); saveSync(); setSyncDot(); closeSheet(); } }
 });
 document.addEventListener('change', e=>{
   if(e.target && e.target.id==='dayInput'){ let v=e.target.value; if(!v) return;
