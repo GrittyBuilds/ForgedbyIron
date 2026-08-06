@@ -82,6 +82,37 @@
   .card.tap{cursor:pointer;transition:transform .1s ease,border-color .15s ease}
   .card.tap:active{transform:scale(.992)}
   .card.tap .go{margin-left:auto;color:var(--ember);font-weight:700}
+  /* --- Today redesign --- */
+  .card-k{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+    font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel);font-weight:700}
+  .card-k .go{color:var(--ember);font-weight:700;text-transform:none;letter-spacing:.01em;font-size:12.5px;cursor:pointer}
+  .drings{display:flex;justify-content:space-around;gap:6px}
+  .dring{display:flex;flex-direction:column;align-items:center;gap:11px;flex:1;min-width:0}
+  .dring-ring{position:relative;width:84px;height:84px}
+  .dring-ring svg.r{width:84px;height:84px;display:block}
+  .dring-v{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;color:var(--txt)}
+  .dring-l{font-size:11px;color:var(--steel);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .hero{position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--ember),transparent)}
+  .hero-k{display:flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--ember);font-weight:700;margin-bottom:10px}
+  .hero-name{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.015em;line-height:1.12}
+  .hero-meta{font-size:12.5px;color:var(--mut);margin-top:6px}
+  .hero-bar{margin-top:14px}
+  .hero .btn{margin-top:15px}
+  .hero-note{font-size:12px;color:var(--mut);line-height:1.5;margin-top:13px;
+    background:var(--ember-soft);border:1px solid var(--ember-line);border-radius:11px;padding:10px 12px}
+  .hero-note .lnk{color:var(--ember);text-decoration:underline;cursor:pointer;font-weight:600}
+  .qlrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+  .qlrow:first-of-type{border-top:none;padding-top:2px}
+  .qlrow .t-nm{font-size:14px}
+  .qlrow .t-nm small{display:block;color:var(--mut);font-size:11.5px;margin-top:2px}
+  .ql-l{font-size:14px;color:var(--txt);flex:none;width:62px}
+  .ql-in{flex:1;min-width:0}
+  .btn.ql-log{width:auto;padding:12px 20px;flex:none;margin-top:0}
   .card h2{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
   .card h2 .sub{margin-left:auto;font-size:12px;color:var(--mut);font-weight:400}
   .sect-title{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--steel);
@@ -778,6 +809,16 @@ function ringSVG(cur,goal){
       stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
       transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .5s ease;filter:drop-shadow(0 0 5px rgba(47,227,199,.40))"/></svg>`;
 }
+function fmtK(n){ n=+n||0; return n>=1000 ? (n/1000).toFixed(n>=10000?0:1)+'k' : String(n); }
+function miniRing(cur,goal,center,label){
+  const r=30,c=2*Math.PI*r,pct=Math.min(1,goal?cur/goal:0),off=c*(1-pct);
+  return `<div class="dring"><div class="dring-ring">
+    <svg class="r" viewBox="0 0 84 84"><circle cx="42" cy="42" r="${r}" stroke="#26282D" stroke-width="8" fill="none"/>
+    <circle cx="42" cy="42" r="${r}" stroke="url(#mring)" stroke-width="8" fill="none" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 42 42)"
+      style="transition:stroke-dashoffset .5s ease;filter:drop-shadow(0 0 4px rgba(47,227,199,.4))"/></svg>
+    <span class="dring-v">${center}</span></div><span class="dring-l">${label}</span></div>`;
+}
 function macroBlock(t){
   return `<div class="ringwrap">
     <div class="ring">${ringSVG(t.kc,TARGET.kc)}<div class="lbl"><b>${t.kc}</b><span>/ ${TARGET.kc} kcal</span></div></div>
@@ -831,38 +872,40 @@ function renderDayBar(show){
 }
 function viewToday(){
   const s=dstore(); const t=dayTotals();
+  const stepGoal=data.stepTarget||8000, steps=+s.steps||0;
   let out='';
   if(!STORAGE_OK) out+=`<div class="banner"><b>Heads up:</b> saving to this device is blocked in the in-app preview. Open the file in your browser (or Add to Home Screen) and your data will persist.</div>`;
-  if(!isToday()) out+=`<div class="card" style="border-color:var(--gold)"><h2 style="margin:0">Viewing ${longDayLabel(curKey())}<span class="sub" data-act="daytoday" style="text-decoration:underline;color:var(--gold);cursor:pointer">back to today</span></h2></div>`;
-  // up next / training block — "now" widgets, only on today
+  if(!isToday()) out+=`<div class="banner" style="border-color:var(--ember-line)">Viewing <b>${longDayLabel(curKey())}</b> · <span data-act="daytoday" class="lnk" style="color:var(--ember);text-decoration:underline;cursor:pointer">back to today</span></div>`;
+  // progress-ring dashboard (the day at a glance)
+  out+=`<div class="card daycard">
+    <div class="card-k"><span>${isToday()?'Your day':relDayLabel(curKey())}</span><span class="go" data-act="nav" data-tab="fuel">Log ›</span></div>
+    <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="mring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5CEEDA"/><stop offset="1" stop-color="#12B9A0"/></linearGradient></defs></svg>
+    <div class="drings">
+      ${miniRing(t.kc,TARGET.kc,t.kc,'Calories')}
+      ${miniRing(t.p,TARGET.p,t.p+'g','Protein')}
+      ${miniRing(steps,stepGoal,fmtK(steps),'Steps')}
+    </div></div>`;
+  // workout hero (today only) — training block folded in
   if(isToday()){
-  { const sp=curSplit(); const rp=getRot(); const d=sp[rp];
-    out+=`<div class="card"><h2>Up Next ${d.priority?'<span class="pill">PRIORITY</span>':''}<span class="sub">Day ${rp+1} of ${sp.length}</span></h2>
-      <div style="font-size:16px;font-weight:600">${d.name}</div>
-      <div style="font-size:12.5px;color:var(--mut);margin-top:3px">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises · train it whenever you're ready</div>
-      <button class="btn" data-act="startlift" data-i="${rp}" style="margin-top:13px">Open Workout →</button></div>`; }
-  // deload / training block
-  { const w=blockWeeks(), N=data.deloadWeeks||8, due=w>=N;
-    out+=`<div class="card ${due?'deload-due':''}"><h2>Training Block<span class="sub">every ${N} wks · <span data-act="setdeload" style="text-decoration:underline;color:var(--blue)">edit</span></span></h2>`;
-    if(due){ out+=`<div style="font-size:16px;font-weight:700;color:var(--gold)">Deload week recommended 🎯</div>
-      <div style="font-size:12.5px;color:var(--mut);margin:5px 0 12px">You've trained ${w} weeks straight — take a lighter week (cut sets ~40%), then start a fresh block.</div>
-      <button class="btn" data-act="didDeload">I deloaded — start new block</button>`; }
-    else { const pct=Math.round(w/N*100); out+=`<div style="font-size:15px;font-weight:600">Week ${w+1} of ${N}</div>
-      <div class="bar" style="margin-top:10px"><i style="width:${pct}%;background:var(--gold)"></i></div>
-      <div style="font-size:12px;color:var(--mut);margin-top:8px">${N-w} week${N-w===1?'':'s'} until your next deload.</div>`; }
-    out+=`</div>`; }
-  } // end today-only widgets
-  // macros
-  out+=`<div class="card tap" data-act="nav" data-tab="fuel"><h2>Nutrition<span class="sub">${activePhase().name}</span><span class="go">Log ›</span></h2>${macroBlock(t)}</div>`;
-  // cardio + steps
-  out+=`<div class="card"><h2>Daily Cardio & Steps</h2>
-    <div class="togrow"><div class="t-nm">Cardio done<small>low-intensity, after lifting</small></div>
-      <div class="switch ${s.cardio?'on':''}" data-act="cardio"></div></div>
-    <div class="inline" style="margin-top:10px"><input class="field" inputmode="numeric" placeholder="Steps today" value="${s.steps||''}" data-in="steps"></div></div>`;
-  // quick weight
-  out+=`<div class="card"><h2>Quick Weigh-in</h2>
-    <div class="inline"><input class="field" inputmode="decimal" placeholder="Weight (${data.unit})" value="${s.weight!=null?toUnit(s.weight):''}" id="qw">
-      <button class="btn green" style="width:auto;padding:12px 18px" data-act="qweight">Log</button></div></div>`;
+    const sp=curSplit(), rp=getRot(), d=sp[rp];
+    const nex=d.blocks.reduce((a,b)=>a+b.ex.length,0);
+    const w=blockWeeks(), N=data.deloadWeeks||8, due=w>=N, pct=Math.min(100,Math.round(w/N*100));
+    out+=`<div class="card hero ${due?'deload-due':''}">
+      <div class="hero-k">${d.priority?'<span class="pill">PRIORITY</span>':''}<span>Up Next · Day ${rp+1} of ${sp.length}</span></div>
+      <div class="hero-name">${d.name}</div>
+      <div class="hero-meta">${nex} exercises · Week ${w+1} of ${N} <span data-act="setdeload" class="lnk" style="color:var(--mut);text-decoration:underline;cursor:pointer">block</span></div>
+      <div class="bar hero-bar"><i style="width:${pct}%;background:var(--ember)"></i></div>
+      ${due?`<div class="hero-note">Deload week recommended — you've trained ${w} weeks straight. Take a lighter week, then <span data-act="didDeload" class="lnk">start a fresh block</span>.</div>`:''}
+      <button class="btn" data-act="startlift" data-i="${rp}">Open Workout →</button>
+    </div>`;
+  }
+  // consolidated quick log
+  out+=`<div class="card">
+    <div class="card-k"><span>Quick log</span></div>
+    <div class="qlrow"><div class="t-nm">Cardio done<small>low-intensity, after lifting</small></div><div class="switch ${s.cardio?'on':''}" data-act="cardio"></div></div>
+    <div class="qlrow"><label class="ql-l">Steps</label><input class="field ql-in" inputmode="numeric" placeholder="e.g. 8000" value="${s.steps||''}" data-in="steps"></div>
+    <div class="qlrow"><label class="ql-l">Weight</label><input class="field ql-in" inputmode="decimal" placeholder="${data.unit}" value="${s.weight!=null?toUnit(s.weight):''}" id="qw"><button class="btn green ql-log" data-act="qweight">Log</button></div>
+  </div>`;
   return out;
 }
 function viewLift(){
