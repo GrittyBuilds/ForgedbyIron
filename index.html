@@ -143,6 +143,11 @@
   .ex-h .nm{font-weight:600;font-size:14.5px}
   .ex-h .tg{font-size:11.5px;color:var(--mut);margin-top:2px}
   .ex-h .last{font-size:11px;color:var(--blue);margin-top:3px}
+  .int-badge{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.03em;color:var(--ember);
+    background:var(--ember-soft);border:1px solid var(--ember-line);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle}
+  .lift-legend{font-size:11px;color:var(--slate);margin:0 4px 13px;line-height:1.5}
+  .lift-legend b{color:var(--steel);font-weight:700}
+  .pdot{color:var(--ember)}
   .pill{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--ember);
     border:1px solid var(--ember-line);background:var(--ember-soft);border-radius:6px;padding:2px 6px;flex:none}
   .sets{padding:0 10px 10px}
@@ -404,285 +409,264 @@
 const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const SPLITS = {
   recomp: [
-  {id:'mon', wd:1, tag:'Push', name:'Push — Chest & Side Delts', blocks:[
-    {label:null, ex:[
-      {n:'Incline Barbell Press', s:4, r:'6–8'},
-      {n:'Flat Dumbbell Press', s:3, r:'8–10'},
-      {n:'Seated DB Shoulder Press', s:3, r:'8–10'},
-      {n:'Cable Lateral Raise', s:4, r:'12–15', p:1},
-      {n:'Incline DB Fly / Pec Deck', s:3, r:'12–15'},
-      {n:'Overhead Rope Triceps Ext.', s:3, r:'10–12'},
-      {n:'Triceps Pushdown', s:3, r:'12–15'},
+    {id:"rc1", wd:1, tag:"Push", name:"Push — Chest, Side Delts & Triceps", blocks:[
+      {label:null, ex:[
+        {n:"Incline Barbell Press", s:3, r:"6–8", rir:"1–2"},
+        {n:"Flat DB / Machine Press", s:3, r:"8–10", rir:"1"},
+        {n:"Cable Lateral Raise", s:4, r:"12–15", rir:"0–1", int:"myo", p:1},
+        {n:"Overhead Rope Triceps Ext.", s:3, r:"10–12", rir:"0–1"},
+        {n:"Triceps Pushdown", s:2, r:"12–15", rir:"0–1", int:"drop"},
+      ]},
     ]},
-    {label:'Core Finisher', ex:[
-      {n:'Weighted Cable Crunch', s:3, r:'12–15'},
-      {n:'Hanging Leg Raise', s:3, r:'10–15'},
-      {n:'Plank', s:3, r:'45–60s'},
+    {id:"rc2", wd:2, tag:"Pull", name:"Pull — Back, Rear Delts & Biceps", blocks:[
+      {label:null, ex:[
+        {n:"Weighted Pull-up / Lat Pulldown", s:3, r:"8–10", rir:"1–2"},
+        {n:"Chest-Supported Row", s:3, r:"8–10", rir:"1"},
+        {n:"Straight-arm Pulldown", s:2, r:"12–15", rir:"0–1"},
+        {n:"Reverse Pec Deck", s:4, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Incline DB Curl", s:3, r:"10–12", rir:"0–1", p:1},
+        {n:"Cable Curl", s:2, r:"12–15", rir:"0–1", int:"RP", p:1},
+      ]},
+      {label:"Calves", ex:[
+        {n:"Standing Calf Raise", s:3, r:"10–12", rir:"0–1"},
+      ]},
     ]},
-  ]},
-  {id:'tue', wd:2, tag:'Pull', name:'Pull — Back Width & Biceps', blocks:[
-    {label:null, ex:[
-      {n:'Weighted Pull-up / Lat Pulldown', s:4, r:'8–10'},
-      {n:'Chest-Supported Row', s:4, r:'8–10'},
-      {n:'Single-arm DB Row', s:3, r:'10–12'},
-      {n:'Straight-arm Pulldown', s:3, r:'12–15'},
-      {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
-      {n:'Incline DB Curl', s:3, r:'10–12', p:1},
-      {n:'EZ-bar / Cable Curl', s:3, r:'10–12', p:1},
+    {id:"rc3", wd:3, tag:"Legs", name:"Legs & Core", blocks:[
+      {label:null, ex:[
+        {n:"Back Squat / Hack Squat", s:3, r:"6–8", rir:"1–2"},
+        {n:"Romanian Deadlift", s:3, r:"8–10", rir:"1"},
+        {n:"Leg Press", s:2, r:"10–12", rir:"1"},
+        {n:"Leg Extension", s:2, r:"12–15", rir:"0–1", int:"drop"},
+        {n:"Seated / Lying Leg Curl", s:3, r:"12–15", rir:"0–1"},
+      ]},
+      {label:"Core Finisher", ex:[
+        {n:"Hanging Leg Raise", s:3, r:"10–15", rir:"0–1"},
+        {n:"Weighted Cable Crunch", s:3, r:"12–15", rir:"0–1"},
+      ]},
     ]},
-    {label:'Calves', ex:[
-      {n:'Standing Calf Raise', s:4, r:'10–12'},
-      {n:'Seated Calf Raise', s:3, r:'15–20'},
+    {id:"rc4", wd:4, tag:"Delts & Arms", name:"Delts & Arms", priority:1, blocks:[
+      {label:null, ex:[
+        {n:"Seated DB Shoulder Press", s:3, r:"8–10", rir:"1", p:1},
+        {n:"Cable Lateral Raise", s:4, r:"12–15", rir:"0–1", int:"myo", p:1},
+        {n:"DB Lateral Raise (partials)", s:3, r:"15–20", rir:"0", p:1},
+        {n:"Reverse Pec Deck", s:3, r:"15–20", rir:"0–1", p:1},
+        {n:"EZ-bar Curl", s:3, r:"8–10", rir:"1", p:1},
+        {n:"Close-grip Bench / Dips", s:3, r:"8–10", rir:"1", p:1},
+        {n:"Incline DB Curl", s:2, r:"10–12", rir:"0–1", int:"RP", p:1},
+        {n:"Overhead Cable Triceps Ext.", s:2, r:"12–15", rir:"0–1", int:"drop", p:1},
+      ]},
+      {label:"Calves", ex:[
+        {n:"Seated Calf Raise", s:3, r:"15–20", rir:"0–1"},
+      ]},
     ]},
-  ]},
-  {id:'wed', wd:3, tag:'Legs', name:'Legs', blocks:[
-    {label:null, ex:[
-      {n:'Back Squat / Hack Squat', s:4, r:'6–8'},
-      {n:'Romanian Deadlift', s:3, r:'8–10'},
-      {n:'Leg Press', s:3, r:'10–12'},
-      {n:'Leg Extension', s:3, r:'12–15'},
-      {n:'Seated / Lying Leg Curl', s:3, r:'12–15'},
+    {id:"rc5", wd:5, tag:"Upper Pump", name:"Upper Pump — Delt/Arm Volume", blocks:[
+      {label:null, ex:[
+        {n:"Incline DB Press", s:2, r:"10–12", rir:"1"},
+        {n:"Neutral-grip Lat Pulldown", s:2, r:"10–12", rir:"1"},
+        {n:"Cable Lateral Raise", s:4, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Face Pull", s:3, r:"15–20", rir:"0–1", p:1},
+        {n:"Preacher / Cable Curl", s:3, r:"10–12", rir:"0–1", int:"drop", p:1},
+        {n:"Rope Pushdown", s:3, r:"12–15", rir:"0–1", int:"RP", p:1},
+        {n:"Hammer Curl", s:2, r:"12–15", rir:"0–1", p:1},
+      ]},
+      {label:"Core Finisher", ex:[
+        {n:"Ab Wheel Rollout", s:3, r:"8–12", rir:"0–1"},
+      ]},
     ]},
-    {label:'Core Finisher', ex:[
-      {n:'Hanging Leg Raise', s:3, r:'12–15'},
-      {n:'Cable Woodchop', s:3, r:'12/side'},
-      {n:'Ab Wheel Rollout', s:3, r:'8–12'},
-    ]},
-  ]},
-  {id:'thu', wd:4, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
-    {label:null, ex:[
-      {n:'Seated DB Shoulder Press', s:4, r:'8–10', p:1},
-      {n:'Cable Lateral Raise', s:4, r:'12–15', p:1},
-      {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
-      {n:'DB Lateral Raise (partials)', s:3, r:'15–20', p:1},
-      {n:'EZ-bar Curl', s:4, r:'8–10', p:1},
-      {n:'Close-grip Bench / Dips', s:4, r:'8–10', p:1},
-      {n:'Incline DB Curl', s:3, r:'10–12', p:1},
-      {n:'Overhead Cable Triceps Ext.', s:3, r:'12–15', p:1},
-    ]},
-    {label:'Calves', ex:[
-      {n:'Standing Calf Raise', s:4, r:'10–12'},
-      {n:'Seated Calf Raise', s:3, r:'15–20'},
-    ]},
-  ]},
-  {id:'fri', wd:5, tag:'Upper Pump', name:'Upper Pump & Delt/Arm Volume', blocks:[
-    {label:null, ex:[
-      {n:'Incline DB Press', s:3, r:'10–12'},
-      {n:'Neutral-grip Lat Pulldown', s:3, r:'10–12'},
-      {n:'Machine Shoulder Press', s:3, r:'10–12', p:1},
-      {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
-      {n:'Cable Fly', s:3, r:'12–15'},
-      {n:'Face Pull', s:3, r:'15–20', p:1},
-      {n:'Preacher Curl', s:3, r:'10–12', p:1},
-      {n:'Rope Pushdown', s:3, r:'12–15', p:1},
-      {n:'Hammer Curl', s:3, r:'12–15', p:1},
-    ]},
-    {label:'Core Finisher', ex:[
-      {n:'Weighted Decline Sit-up', s:3, r:'12–15'},
-      {n:"Captain's Chair Leg Raise", s:3, r:'15'},
-      {n:'Cable Crunch', s:3, r:'15'},
-    ]},
-  ]},
   ],
   bulk: [
-    {id:'b1', wd:1, tag:'Chest', name:'Chest & Triceps — Heavy', blocks:[
+    {id:"lb1", wd:1, tag:"Chest", name:"Chest, Side Delts & Triceps", blocks:[
       {label:null, ex:[
-        {n:'Barbell Bench Press', s:4, r:'5–7'},
-        {n:'Incline DB Press', s:4, r:'8–10'},
-        {n:'Weighted Dips', s:3, r:'8–10'},
-        {n:'Cable Fly', s:3, r:'12–15'},
-        {n:'Close-grip Bench Press', s:3, r:'6–8'},
-        {n:'Overhead Rope Triceps Ext.', s:3, r:'10–12'},
+        {n:"Barbell Bench Press", s:4, r:"5–7", rir:"1–2"},
+        {n:"Incline DB Press", s:4, r:"8–10", rir:"1"},
+        {n:"Weighted Dips", s:3, r:"8–10", rir:"1"},
+        {n:"Cable Fly", s:3, r:"12–15", rir:"0–1", int:"drop"},
+        {n:"Cable Lateral Raise", s:4, r:"12–15", rir:"0–1", p:1},
+        {n:"Close-grip Bench Press", s:3, r:"6–8", rir:"1"},
+        {n:"Overhead Rope Triceps Ext.", s:3, r:"10–12", rir:"0–1", int:"RP"},
       ]},
     ]},
-    {id:'b2', wd:2, tag:'Back', name:'Back & Biceps — Heavy', blocks:[
+    {id:"lb2", wd:2, tag:"Back", name:"Back, Rear Delts & Biceps", blocks:[
       {label:null, ex:[
-        {n:'Deadlift', s:4, r:'4–6'},
-        {n:'Weighted Pull-up', s:4, r:'6–8'},
-        {n:'Barbell Row', s:4, r:'6–8'},
-        {n:'Chest-Supported Row', s:3, r:'10–12'},
-        {n:'Barbell Curl', s:4, r:'8–10'},
-        {n:'Hammer Curl', s:3, r:'10–12'},
+        {n:"Deadlift", s:3, r:"4–6", rir:"1–2"},
+        {n:"Weighted Pull-up", s:4, r:"6–8", rir:"1"},
+        {n:"Barbell Row", s:4, r:"6–8", rir:"1"},
+        {n:"Chest-Supported Row", s:3, r:"10–12", rir:"0–1"},
+        {n:"Reverse Pec Deck", s:3, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Barbell Curl", s:4, r:"8–10", rir:"1", p:1},
+        {n:"Hammer Curl", s:3, r:"10–12", rir:"0–1", int:"drop", p:1},
       ]},
     ]},
-    {id:'b3', wd:3, tag:'Legs', name:'Legs — Heavy', blocks:[
+    {id:"lb3", wd:3, tag:"Legs", name:"Legs", blocks:[
       {label:null, ex:[
-        {n:'Back Squat', s:5, r:'5'},
-        {n:'Leg Press', s:4, r:'8–10'},
-        {n:'Romanian Deadlift', s:4, r:'8–10'},
-        {n:'Walking Lunge', s:3, r:'10/leg'},
-        {n:'Seated Leg Curl', s:3, r:'12–15'},
+        {n:"Back Squat", s:4, r:"5–6", rir:"1–2"},
+        {n:"Leg Press", s:4, r:"8–10", rir:"1"},
+        {n:"Romanian Deadlift", s:4, r:"8–10", rir:"1"},
+        {n:"Walking Lunge", s:2, r:"10/leg", rir:"1"},
+        {n:"Seated Leg Curl", s:3, r:"12–15", rir:"0–1", int:"drop"},
       ]},
-      {label:'Calves', ex:[
-        {n:'Standing Calf Raise', s:4, r:'8–12'},
-      ]},
-    ]},
-    {id:'b4', wd:4, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
-      {label:null, ex:[
-        {n:'Standing Overhead Press', s:4, r:'6–8', p:1},
-        {n:'Seated DB Shoulder Press', s:3, r:'8–10', p:1},
-        {n:'Cable Lateral Raise', s:4, r:'12–15', p:1},
-        {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
-        {n:'EZ-bar Curl', s:4, r:'8–10', p:1},
-        {n:'Close-grip Bench / Dips', s:4, r:'8–10', p:1},
+      {label:"Calves", ex:[
+        {n:"Standing Calf Raise", s:4, r:"8–12", rir:"0–1"},
       ]},
     ]},
-    {id:'b5', wd:5, tag:'Upper', name:'Upper Volume', blocks:[
+    {id:"lb4", wd:4, tag:"Delts & Arms", name:"Delts & Arms", priority:1, blocks:[
       {label:null, ex:[
-        {n:'Incline DB Press', s:4, r:'8–12'},
-        {n:'Machine Row', s:4, r:'10–12'},
-        {n:'DB Shoulder Press', s:3, r:'10–12'},
-        {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
-        {n:'Cable Fly', s:3, r:'12–15'},
-        {n:'Face Pull', s:3, r:'15–20'},
-        {n:'Preacher Curl', s:3, r:'10–12'},
-        {n:'Rope Pushdown', s:3, r:'12–15'},
+        {n:"Standing Overhead Press", s:3, r:"6–8", rir:"1–2", p:1},
+        {n:"Seated DB Shoulder Press", s:3, r:"8–10", rir:"1", p:1},
+        {n:"Cable Lateral Raise", s:5, r:"12–15", rir:"0–1", int:"myo", p:1},
+        {n:"DB Lateral Raise (partials)", s:3, r:"15–20", rir:"0", p:1},
+        {n:"Reverse Pec Deck", s:4, r:"15–20", rir:"0–1", p:1},
+        {n:"EZ-bar Curl", s:4, r:"8–10", rir:"1", p:1},
+        {n:"Close-grip Bench / Dips", s:4, r:"8–10", rir:"1", p:1},
+      ]},
+    ]},
+    {id:"lb5", wd:5, tag:"Upper", name:"Upper Volume", blocks:[
+      {label:null, ex:[
+        {n:"Incline DB Press", s:4, r:"8–12", rir:"1"},
+        {n:"Machine Row", s:4, r:"10–12", rir:"0–1"},
+        {n:"Cable Lateral Raise", s:5, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Face Pull", s:3, r:"15–20", rir:"0–1", p:1},
+        {n:"Cable Fly", s:3, r:"12–15", rir:"0–1"},
+        {n:"Preacher Curl", s:3, r:"10–12", rir:"0–1", int:"RP", p:1},
+        {n:"Rope Pushdown", s:3, r:"12–15", rir:"0–1", int:"drop", p:1},
+      ]},
+      {label:"Core Finisher", ex:[
+        {n:"Hanging Leg Raise", s:3, r:"12–15", rir:"0–1"},
       ]},
     ]},
   ],
   cut: [
-    {id:'c1', wd:1, tag:'Push', name:'Push — Chest & Delts', blocks:[
+    {id:"ct1", wd:1, tag:"Push", name:"Push — Chest & Delts", blocks:[
       {label:null, ex:[
-        {n:'Incline DB Press', s:4, r:'10–12'},
-        {n:'Flat Machine Press', s:3, r:'12–15'},
-        {n:'Seated DB Shoulder Press', s:3, r:'10–12'},
-        {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
-        {n:'Cable Fly', s:3, r:'15'},
-        {n:'Rope Pushdown', s:3, r:'12–15'},
-        {n:'Overhead Cable Triceps Ext.', s:3, r:'12–15'},
+        {n:"Incline DB Press", s:3, r:"10–12", rir:"1"},
+        {n:"Flat Machine Press", s:2, r:"12–15", rir:"1"},
+        {n:"Seated DB Shoulder Press", s:2, r:"10–12", rir:"1"},
+        {n:"Cable Lateral Raise", s:4, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Cable Fly", s:2, r:"15", rir:"0–1"},
+        {n:"Rope Pushdown", s:2, r:"12–15", rir:"0–1", int:"drop"},
+        {n:"Overhead Cable Triceps Ext.", s:2, r:"12–15", rir:"0–1"},
       ]},
-      {label:'Core Finisher', ex:[
-        {n:'Hanging Leg Raise', s:3, r:'12–15'},
-        {n:'Cable Crunch', s:3, r:'15'},
+      {label:"Core Finisher", ex:[
+        {n:"Hanging Leg Raise", s:3, r:"12–15", rir:"0–1"},
       ]},
     ]},
-    {id:'c2', wd:2, tag:'Pull', name:'Pull — Back & Biceps', blocks:[
+    {id:"ct2", wd:2, tag:"Pull", name:"Pull — Back & Biceps", blocks:[
       {label:null, ex:[
-        {n:'Lat Pulldown', s:4, r:'10–12'},
-        {n:'Chest-Supported Row', s:4, r:'10–12'},
-        {n:'Single-arm DB Row', s:3, r:'12–15'},
-        {n:'Straight-arm Pulldown', s:3, r:'15'},
-        {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
-        {n:'Incline DB Curl', s:3, r:'12–15'},
-        {n:'Cable Curl', s:3, r:'12–15'},
+        {n:"Lat Pulldown", s:3, r:"10–12", rir:"1"},
+        {n:"Chest-Supported Row", s:3, r:"10–12", rir:"1"},
+        {n:"Single-arm DB Row", s:2, r:"12–15", rir:"0–1"},
+        {n:"Reverse Pec Deck", s:4, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Incline DB Curl", s:3, r:"12–15", rir:"0–1", p:1},
+        {n:"Cable Curl", s:2, r:"12–15", rir:"0–1", int:"RP"},
       ]},
-      {label:'Calves', ex:[
-        {n:'Seated Calf Raise', s:4, r:'15–20'},
+      {label:"Calves", ex:[
+        {n:"Seated Calf Raise", s:3, r:"15–20", rir:"0–1"},
       ]},
     ]},
-    {id:'c3', wd:3, tag:'Legs', name:'Legs', blocks:[
+    {id:"ct3", wd:3, tag:"Legs", name:"Legs", blocks:[
       {label:null, ex:[
-        {n:'Hack Squat', s:4, r:'10–12'},
-        {n:'Romanian Deadlift', s:3, r:'10–12'},
-        {n:'Leg Press', s:3, r:'12–15'},
-        {n:'Leg Extension', s:4, r:'15–20'},
-        {n:'Lying Leg Curl', s:4, r:'12–15'},
+        {n:"Hack Squat", s:3, r:"10–12", rir:"1"},
+        {n:"Romanian Deadlift", s:3, r:"10–12", rir:"1"},
+        {n:"Leg Press", s:2, r:"12–15", rir:"1"},
+        {n:"Leg Extension", s:3, r:"15–20", rir:"0–1", int:"drop"},
+        {n:"Lying Leg Curl", s:3, r:"12–15", rir:"0–1"},
       ]},
-      {label:'Core Finisher', ex:[
-        {n:'Weighted Cable Crunch', s:3, r:'15'},
-        {n:'Plank', s:3, r:'45–60s'},
+      {label:"Core Finisher", ex:[
+        {n:"Weighted Cable Crunch", s:3, r:"15", rir:"0–1"},
       ]},
     ]},
-    {id:'c4', wd:4, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
+    {id:"ct4", wd:4, tag:"Delts & Arms", name:"Delts & Arms", priority:1, blocks:[
       {label:null, ex:[
-        {n:'Machine Shoulder Press', s:4, r:'10–12', p:1},
-        {n:'Cable Lateral Raise', s:5, r:'15–20', p:1},
-        {n:'Reverse Pec Deck', s:4, r:'15–20', p:1},
-        {n:'DB Lateral Raise (partials)', s:3, r:'20', p:1},
-        {n:'EZ-bar Curl', s:4, r:'10–12', p:1},
-        {n:'Rope Pushdown', s:4, r:'12–15', p:1},
-        {n:'Incline DB Curl', s:3, r:'12–15', p:1},
-        {n:'Overhead Cable Triceps Ext.', s:3, r:'12–15', p:1},
+        {n:"Machine Shoulder Press", s:3, r:"10–12", rir:"1", p:1},
+        {n:"Cable Lateral Raise", s:5, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Reverse Pec Deck", s:3, r:"15–20", rir:"0–1", p:1},
+        {n:"DB Lateral Raise (partials)", s:3, r:"20", rir:"0", p:1},
+        {n:"EZ-bar Curl", s:3, r:"10–12", rir:"1", p:1},
+        {n:"Rope Pushdown", s:3, r:"12–15", rir:"0–1", int:"drop", p:1},
+        {n:"Incline DB Curl", s:2, r:"12–15", rir:"0–1", p:1},
       ]},
     ]},
-    {id:'c5', wd:5, tag:'Full Pump', name:'Full-Body Pump & Conditioning', blocks:[
+    {id:"ct5", wd:5, tag:"Full Pump", name:"Full-Body Pump & Conditioning", blocks:[
       {label:null, ex:[
-        {n:'Incline DB Press', s:3, r:'12–15'},
-        {n:'Neutral-grip Pulldown', s:3, r:'12–15'},
-        {n:'Cable Lateral Raise', s:4, r:'15–20', p:1},
-        {n:'Leg Extension', s:3, r:'15–20'},
-        {n:'Lying Leg Curl', s:3, r:'15'},
-        {n:'Cable Curl', s:3, r:'15'},
-        {n:'Rope Pushdown', s:3, r:'15'},
+        {n:"Incline DB Press", s:2, r:"12–15", rir:"1"},
+        {n:"Neutral-grip Pulldown", s:2, r:"12–15", rir:"1"},
+        {n:"Cable Lateral Raise", s:4, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Leg Extension", s:2, r:"15–20", rir:"0–1"},
+        {n:"Lying Leg Curl", s:2, r:"15", rir:"0–1"},
+        {n:"Cable Curl", s:2, r:"15", rir:"0–1"},
+        {n:"Rope Pushdown", s:2, r:"15", rir:"0–1"},
       ]},
-      {label:'Core Finisher', ex:[
-        {n:"Captain's Chair Leg Raise", s:3, r:'15'},
-        {n:'Ab Wheel Rollout', s:3, r:'10–12'},
+      {label:"Core Finisher", ex:[
+        {n:"Ab Wheel Rollout", s:3, r:"10–12", rir:"0–1"},
       ]},
     ]},
   ],
   prep: [
-    {id:'p1', wd:1, tag:'Chest & Back', name:'Chest & Back — Detail', blocks:[
+    {id:"pp1", wd:1, tag:"Chest & Back", name:"Chest & Back — Detail", blocks:[
       {label:null, ex:[
-        {n:'Incline DB Press', s:4, r:'10–12'},
-        {n:'Weighted Pull-up / Pulldown', s:4, r:'10–12'},
-        {n:'Cable Fly (high-to-low)', s:3, r:'15'},
-        {n:'Chest-Supported Row', s:4, r:'12–15'},
-        {n:'Straight-arm Pulldown', s:3, r:'15–20'},
+        {n:"Incline DB Press", s:3, r:"10–12", rir:"1"},
+        {n:"Weighted Pull-up / Pulldown", s:3, r:"10–12", rir:"1"},
+        {n:"Chest-Supported Row", s:3, r:"12–15", rir:"1"},
+        {n:"Cable Fly (high-to-low)", s:2, r:"15", rir:"0–1"},
+        {n:"Straight-arm Pulldown", s:2, r:"15–20", rir:"0–1"},
       ]},
-      {label:'Abs', ex:[
-        {n:'Hanging Leg Raise', s:4, r:'15'},
-        {n:'Cable Crunch', s:4, r:'15–20'},
+      {label:"Abs", ex:[
+        {n:"Hanging Leg Raise", s:3, r:"15", rir:"0–1"},
       ]},
     ]},
-    {id:'p2', wd:2, tag:'Delts & Arms', name:'Delts & Arms — Priority', priority:1, blocks:[
+    {id:"pp2", wd:2, tag:"Delts & Arms", name:"Delts & Arms", priority:1, blocks:[
       {label:null, ex:[
-        {n:'Seated DB Shoulder Press', s:4, r:'10–12', p:1},
-        {n:'Cable Lateral Raise', s:5, r:'15–20', p:1},
-        {n:'Reverse Pec Deck', s:5, r:'15–20', p:1},
-        {n:'DB Lateral Raise (partials)', s:4, r:'20', p:1},
-        {n:'EZ-bar Curl', s:4, r:'10–12', p:1},
-        {n:'Rope Pushdown', s:4, r:'12–15', p:1},
-        {n:'Cable Curl', s:3, r:'15', p:1},
-        {n:'Overhead Cable Triceps Ext.', s:3, r:'15', p:1},
+        {n:"Seated DB Shoulder Press", s:3, r:"10–12", rir:"1", p:1},
+        {n:"Cable Lateral Raise", s:5, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Reverse Pec Deck", s:3, r:"15–20", rir:"0–1", p:1},
+        {n:"DB Lateral Raise (partials)", s:3, r:"20", rir:"0", p:1},
+        {n:"EZ-bar Curl", s:3, r:"10–12", rir:"1", p:1},
+        {n:"Rope Pushdown", s:3, r:"12–15", rir:"0–1", p:1},
       ]},
     ]},
-    {id:'p3', wd:3, tag:'Legs', name:'Legs — Quad & Ham Detail', blocks:[
+    {id:"pp3", wd:3, tag:"Legs", name:"Legs — Quad & Ham Detail", blocks:[
       {label:null, ex:[
-        {n:'Hack Squat', s:4, r:'12–15'},
-        {n:'Leg Press (feet low)', s:4, r:'12–15'},
-        {n:'Leg Extension', s:5, r:'15–20'},
-        {n:'Romanian Deadlift', s:4, r:'10–12'},
-        {n:'Lying Leg Curl', s:4, r:'15'},
+        {n:"Hack Squat", s:3, r:"12–15", rir:"1"},
+        {n:"Leg Press (feet low)", s:3, r:"12–15", rir:"1"},
+        {n:"Leg Extension", s:3, r:"15–20", rir:"0–1"},
+        {n:"Romanian Deadlift", s:3, r:"10–12", rir:"1"},
+        {n:"Lying Leg Curl", s:3, r:"15", rir:"0–1"},
       ]},
-      {label:'Calves', ex:[
-        {n:'Standing Calf Raise', s:5, r:'12–15'},
-        {n:'Seated Calf Raise', s:4, r:'15–20'},
+      {label:"Calves", ex:[
+        {n:"Standing Calf Raise", s:3, r:"12–15", rir:"0–1"},
       ]},
     ]},
-    {id:'p4', wd:4, tag:'Chest & Back', name:'Chest & Back — Volume', blocks:[
+    {id:"pp4", wd:4, tag:"Chest & Back", name:"Chest & Back — Volume", blocks:[
       {label:null, ex:[
-        {n:'Low-incline DB Press', s:4, r:'12–15'},
-        {n:'Neutral-grip Pulldown', s:4, r:'12–15'},
-        {n:'Pec Deck', s:3, r:'15–20'},
-        {n:'Single-arm Cable Row', s:4, r:'12–15'},
-        {n:'Reverse Pec Deck', s:4, r:'20', p:1},
+        {n:"Low-incline DB Press", s:3, r:"12–15", rir:"1"},
+        {n:"Neutral-grip Pulldown", s:3, r:"12–15", rir:"1"},
+        {n:"Pec Deck", s:2, r:"15–20", rir:"0–1"},
+        {n:"Single-arm Cable Row", s:3, r:"12–15", rir:"0–1"},
+        {n:"Reverse Pec Deck", s:3, r:"20", rir:"0–1", p:1},
       ]},
-      {label:'Abs', ex:[
-        {n:"Captain's Chair Leg Raise", s:4, r:'15'},
-        {n:'Weighted Decline Sit-up', s:4, r:'15'},
+      {label:"Abs", ex:[
+        {n:"Captain's Chair Leg Raise", s:3, r:"15", rir:"0–1"},
       ]},
     ]},
-    {id:'p5', wd:5, tag:'Delts & Arms', name:'Delts & Arms — Volume', priority:1, blocks:[
+    {id:"pp5", wd:5, tag:"Delts & Arms", name:"Delts & Arms — Volume", priority:1, blocks:[
       {label:null, ex:[
-        {n:'Machine Shoulder Press', s:4, r:'12–15', p:1},
-        {n:'Cable Lateral Raise', s:6, r:'15–20', p:1},
-        {n:'Face Pull', s:4, r:'15–20', p:1},
-        {n:'Preacher Curl', s:4, r:'12–15', p:1},
-        {n:'Hammer Curl', s:3, r:'12–15', p:1},
-        {n:'Rope Pushdown', s:4, r:'15', p:1},
-        {n:'Overhead Cable Triceps Ext.', s:3, r:'15', p:1},
+        {n:"Machine Shoulder Press", s:3, r:"12–15", rir:"1", p:1},
+        {n:"Cable Lateral Raise", s:5, r:"15–20", rir:"0–1", int:"myo", p:1},
+        {n:"Face Pull", s:3, r:"15–20", rir:"0–1", p:1},
+        {n:"Preacher Curl", s:3, r:"12–15", rir:"0–1", p:1},
+        {n:"Hammer Curl", s:2, r:"12–15", rir:"0–1", p:1},
+        {n:"Overhead Cable Triceps Ext.", s:2, r:"15", rir:"0–1", p:1},
       ]},
     ]},
-    {id:'p6', wd:6, tag:'Posing & Abs', name:'Posing, Conditioning & Abs', blocks:[
-      {label:'Posing', ex:[
-        {n:'Quarter Turns + Mandatories', s:3, r:'60s hold'},
-        {n:'Vacuum Practice', s:3, r:'20s'},
+    {id:"pp6", wd:6, tag:"Posing & Abs", name:"Posing, Conditioning & Abs", blocks:[
+      {label:"Posing", ex:[
+        {n:"Quarter Turns + Mandatories", s:3, r:"60s hold"},
+        {n:"Vacuum Practice", s:3, r:"20s"},
       ]},
-      {label:'Abs & Conditioning', ex:[
-        {n:'Hanging Leg Raise', s:4, r:'15'},
-        {n:'Cable Woodchop', s:3, r:'12/side'},
-        {n:'Ab Wheel Rollout', s:3, r:'12'},
+      {label:"Abs & Conditioning", ex:[
+        {n:"Hanging Leg Raise", s:4, r:"15", rir:"0–1"},
+        {n:"Cable Woodchop", s:3, r:"12/side", rir:"0–1"},
+        {n:"Ab Wheel Rollout", s:3, r:"12", rir:"0–1"},
       ]},
     ]},
   ],
@@ -692,24 +676,25 @@ function curSplit(){ return SPLITS[activePhase().id] || SPLITS.recomp; }
 // Auto coefficients are per POUND of bodyweight (kcalPerLb, proteinPerLb) and % of calories (fatPct).
 const PHASES = [
   {id:'recomp', name:'Recomp', tagline:'Maintain · recomposition',
-   desc:'Hold your weight near maintenance and slowly trade fat for muscle, with protein kept high.',
-   kc:2000, p:160, c:215, f:56, cardio:'Cardio daily · abs Mon/Wed/Fri · calves Tue/Thu',
+   desc:'Hold near maintenance and slowly trade fat for muscle, protein kept high. Moderate, priority-biased volume — delts, arms, and core get first call; front delts stay restrained since heavy pressing already feeds them.',
+   kc:2000, p:160, c:215, f:56, deload:8, cardio:'Cardio daily · core on Legs & Upper days · calves on Pull & Delt/Arm days',
    kcalPerLb:12.5, proteinPerLb:1.0, fatPct:0.25},
   {id:'bulk', name:'Lean Bulk', tagline:'Controlled surplus',
-   desc:'A controlled calorie surplus to add size and strength while staying relatively tight.',
-   kc:2450, p:180, c:290, f:65, cardio:'Cardio 2–3×/week to stay conditioned',
+   desc:'A controlled surplus to add size while staying tight. Volume is highest here — recovery is best when you are fed, so push growth. Shifted toward hypertrophy rep ranges, with side/rear delt and core work on every day.',
+   kc:2450, p:180, c:290, f:65, deload:8, cardio:'Cardio 2–3×/week to stay conditioned',
    kcalPerLb:15.3, proteinPerLb:1.1, fatPct:0.24},
   {id:'cut', name:'Cut', tagline:'Fat loss',
-   desc:'A moderate deficit to strip body fat while holding onto muscle with high protein.',
-   kc:1650, p:185, c:120, f:45, cardio:'Cardio daily · 30–40 min low-intensity',
+   desc:'A moderate deficit to strip fat while holding muscle. Volume is trimmed below Recomp — in a deficit, effort and load retain muscle, not extra sets — while the higher-rep feel and daily cardio stay.',
+   kc:1650, p:185, c:120, f:45, deload:6, cardio:'Cardio daily · 30–40 min low-intensity',
    kcalPerLb:10.3, proteinPerLb:1.15, fatPct:0.25},
   {id:'prep', name:'Contest Prep', tagline:'Stage-ready',
-   desc:'An aggressive deficit with very high protein to reach stage-ready condition — track everything tightly.',
-   kc:1450, p:190, c:90, f:38, cardio:'Cardio up to 2×/day · daily steps 12k+',
+   desc:'An aggressive deficit to reach stage condition. Volume is lowest by design — recovery is worst, so maintain muscle with heavy loads and high effort rather than chase growth. Posing and conditioning do the extra work.',
+   kc:1450, p:190, c:90, f:38, deload:6, cardio:'Cardio up to 2×/day · daily steps 12k+',
    kcalPerLb:9.0, proteinPerLb:1.2, fatPct:0.23},
 ];
 const TARGET = {kc:2000, p:160, c:215, f:56};
 function activePhase(){ return PHASES.find(p=>p.id===(data&&data.phase))||PHASES[0]; }
+function deloadN(){ return (data&&data.deloadWeeks) || activePhase().deload || 8; }
 function phaseDefaults(id){ return PHASES.find(p=>p.id===id)||PHASES[0]; }
 /* Latest logged bodyweight, stored internally in lb (null if none yet). */
 function latestWeightLb(){ const ks=Object.keys(data&&data.dates||{}).filter(k=>data.dates[k]&&data.dates[k].weight!=null).sort(); return ks.length? data.dates[ks[ks.length-1]].weight : null; }
@@ -762,7 +747,7 @@ function addDays(key,n){ const d=new Date(key+'T00:00'); d.setDate(d.getDate()+n
 function relDayLabel(key){ const tk=todayKey(); if(key===tk) return 'Today'; if(key===addDays(tk,-1)) return 'Yesterday';
   return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
 function longDayLabel(key){ return new Date(key+'T00:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
-function ensureDefaults(){ let ch=false; if(!data.deloadWeeks){ data.deloadWeeks=8; ch=true; } if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; } if(!data.phaseTargets){ data.phaseTargets={}; ch=true; } if(!data.phaseMode){ data.phaseMode={}; ch=true; } if(!data.rotationByPhase){ data.rotationByPhase={}; if(typeof data.rotationPos==='number') data.rotationByPhase.recomp=data.rotationPos; ch=true; }
+function ensureDefaults(){ let ch=false; if(!data.blockStart){ data.blockStart=todayKey(); ch=true; } if(data.rotationPos==null){ data.rotationPos=0; ch=true; } if(!data.phase){ data.phase='recomp'; ch=true; } if(!data.phaseTargets){ data.phaseTargets={}; ch=true; } if(!data.phaseMode){ data.phaseMode={}; ch=true; } if(!data.rotationByPhase){ data.rotationByPhase={}; if(typeof data.rotationPos==='number') data.rotationByPhase.recomp=data.rotationPos; ch=true; }
   if(!data.foods){ data.foods=[
     {id:'f_pre',name:'Pre-Workout (100g grapes)',p:1,c:18,f:0},
     {id:'f_cor',name:'Cream of Rice + Whey',p:46,c:86,f:5},
@@ -889,7 +874,7 @@ function viewToday(){
   if(isToday()){
     const sp=curSplit(), rp=getRot(), d=sp[rp];
     const nex=d.blocks.reduce((a,b)=>a+b.ex.length,0);
-    const w=blockWeeks(), N=data.deloadWeeks||8, due=w>=N, pct=Math.min(100,Math.round(w/N*100));
+    const w=blockWeeks(), N=deloadN(), due=w>=N, pct=Math.min(100,Math.round(w/N*100));
     out+=`<div class="card hero ${due?'deload-due':''}">
       <div class="hero-k">${d.priority?'<span class="pill">PRIORITY</span>':''}<span>Up Next · Day ${rp+1} of ${sp.length}</span></div>
       <div class="hero-name">${d.name}</div>
@@ -917,6 +902,7 @@ function viewLift(){
   out+=`<div style="font-size:12.5px;color:var(--mut);margin:2px 4px 10px">Day ${state.liftDay+1} · ${d.name}${d.priority?' · priority':''}${state.liftDay===rp?' · up next':''}</div>`;
   const rd=data.restDefault||120; const RO=[[60,'60s'],[90,'90s'],[120,'2m'],[180,'3m']];
   out+=`<div class="restsel"><span>Rest timer</span>${RO.map(o=>`<button class="${o[0]===rd?'on':''}" data-act="setrest" data-s="${o[0]}">${o[1]}</button>`).join('')}</div>`;
+  out+=`<div class=\"lift-legend\"><b>RIR</b> = reps left in reserve · <b>+myo/+drop/+RP</b> apply to the final set · <span class=\"pdot\">●</span> priority bring-up</div>`;
   d.blocks.forEach(block=>{
     if(block.label) out+=`<div class="sect-title">${block.label}</div>`;
     block.ex.forEach(ex=>{
@@ -934,7 +920,7 @@ function viewLift(){
           <div class="chk ${st.done?'on':''}" data-act="setdone" data-ex="${enc(ex.n)}" data-i="${i}">✓</div></div>`;
       }
       out+=`<div class="ex ${ex.p?'pri':''}"><div class="ex-h"><div><div class="nm">${ex.n}</div>
-        <div class="tg">${ex.s} × ${ex.r}</div>${last?`<div class="last">${last}</div>`:''}</div>
+        <div class="tg">${ex.s} × ${ex.r}${ex.rir?` · ${ex.rir} RIR`:''}${ex.int?` <span class="int-badge" title="on the final set">+${ex.int}</span>`:''}</div>${last?`<div class="last">${last}</div>`:''}</div>
         ${ex.p?'<span class="pill">PRIORITY</span>':''}</div><div class="sets">${rows}</div></div>`;
     });
   });
@@ -1060,12 +1046,12 @@ function viewProgram(){
     <div class="tile"><div class="big">${TARGET.p}<small>g</small></div><div class="lab">Protein</div></div>
     <div class="tile"><div class="big">${TARGET.c}<small>g</small></div><div class="lab">Carbs</div></div>
     <div class="tile"><div class="big">${TARGET.f}<small>g</small></div><div class="lab">Fat</div></div></div>
-    <div style="font-size:11.5px;color:var(--mut);margin-top:10px">${ph.cardio} · deload every ${data.deloadWeeks||8} weeks.</div></div>`;
+    <div style="font-size:11.5px;color:var(--mut);margin-top:10px">${ph.cardio} · deload every ${deloadN()} weeks.</div></div>`;
   const split=curSplit();
   out+=`<div class="sect-title">Training Split · ${split.length}-day</div>`;
   split.forEach((d,i)=>{ out+=`<div class="ex ${d.priority?'pri':''}"><div class="ex-h"><div><div class="nm">Day ${i+1} · ${d.name}</div>
     <div class="tg">${d.blocks.reduce((a,b)=>a+b.ex.length,0)} exercises</div></div>${d.priority?'<span class="pill">PRIORITY</span>':''}</div>
-    <div class="sets">`+ d.blocks.map(b=>(b.label?`<div style="font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);padding:7px 4px 2px">${b.label}</div>`:'')+ b.ex.map(e=>`<div class="setrow" style="justify-content:space-between;gap:10px"><span style="font-weight:600">${e.n}</span><span class="sr">${e.s} × ${e.r}</span></div>`).join('')).join('') +`</div></div>`; });
+    <div class="sets">`+ d.blocks.map(b=>(b.label?`<div style="font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);padding:7px 4px 2px">${b.label}</div>`:'')+ b.ex.map(e=>`<div class="setrow" style="justify-content:space-between;gap:10px"><span style="font-weight:600">${e.p?'<span class="pdot">●</span> ':''}${e.n}</span><span class="sr">${e.s} × ${e.r}${e.rir?` · ${e.rir} RIR`:''}${e.int?` +${e.int}`:''}</span></div>`).join('')).join('') +`</div></div>`; });
   return out;
 }
 function targetsSheet(){
@@ -1347,7 +1333,7 @@ document.addEventListener('click', e=>{
     const bad=[kc,p,c,f].some(n=>isNaN(n)||n<0||n>20000); if(bad){ const m=document.getElementById('tgtmsg'); if(m) m.textContent='Enter valid numbers for all four targets.'; return; }
     const id=activePhase().id; (data.phaseTargets=data.phaseTargets||{})[id]={kc,p,c,f}; (data.phaseMode=data.phaseMode||{})[id]='custom'; applyPhase(); touchSettings(); save(); closeSheet(); render(); showToast(activePhase().name+' targets updated'); }
   else if(a==='didDeload'){ data.blockStart=todayKey(); touchSettings(); save(); render(); showToast('New training block started 💪'); }
-  else if(a==='setdeload'){ const n=prompt('Deload every how many weeks? (3–16)', data.deloadWeeks||8); if(n){ const v=parseInt(n,10); if(v>=3&&v<=16){ data.deloadWeeks=v; touchSettings(); save(); render(); } } }
+  else if(a==='setdeload'){ const n=prompt('Deload every how many weeks? (3–16)', deloadN()); if(n){ const v=parseInt(n,10); if(v>=3&&v<=16){ data.deloadWeeks=v; touchSettings(); save(); render(); } } }
   else if(a==='setrest'){ data.restDefault=+el.dataset.s; touchSettings(); save(); render(); }
   else if(a==='rest-15'){ addRest(-15); }
   else if(a==='rest+15'){ addRest(15); }
