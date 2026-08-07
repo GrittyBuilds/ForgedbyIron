@@ -143,6 +143,13 @@
   .ex-h .nm{font-weight:600;font-size:14.5px}
   .ex-h .tg{font-size:11.5px;color:var(--mut);margin-top:2px}
   .ex-h .last{font-size:11px;color:var(--blue);margin-top:3px}
+  .ex-h .sugg{display:inline-flex;align-items:center;gap:7px;margin-top:5px;font-size:11.5px;color:var(--steel);cursor:pointer}
+  .ex-h .sugg b{font-weight:700;color:var(--txt)}
+  .ex-h .sugg.up{color:var(--ember)}
+  .ex-h .sugg.up b{color:var(--ember)}
+  .ex-h .sugg .use{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ember);
+    background:var(--ember-soft);border:1px solid var(--ember-line);border-radius:5px;padding:2px 6px}
+  .ex-h .sugg:active .use{filter:brightness(1.15)}
   .int-badge{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.03em;color:var(--ember);
     background:var(--ember-soft);border:1px solid var(--ember-line);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle}
   .lift-legend{font-size:11px;color:var(--slate);margin:0 4px 13px;line-height:1.5}
@@ -893,6 +900,25 @@ function viewToday(){
   </div>`;
   return out;
 }
+/* ---- double-progression auto weight suggestion ---- */
+function repRange(r){ r=String(r); if(/hold|sec/i.test(r)) return null;
+  const m=r.match(/(\d+)\s*[–-]\s*(\d+)/); if(m) return {lo:+m[1],hi:+m[2]};
+  const one=r.match(/^\s*(\d+)/); if(one&&!/\ds\b|s$/i.test(r)) return {lo:+one[1],hi:+one[1]}; return null; }
+function fmtWt(w){ w=Math.round(w*100)/100; return (Number.isInteger(w)?w:parseFloat(w.toFixed(2))).toString(); }
+/* Suggest next-session load: if every weighted set last time hit the top of the rep
+   range, add the smallest plate step and reset to the bottom; otherwise repeat and beat reps. */
+function suggestWeight(ex){
+  const rr=repRange(ex.r); if(!rr) return null;
+  const ls=lastSets(ex.n); if(!ls) return null;
+  const done=ls.filter(st=>st.w!==''&&!isNaN(parseFloat(st.w)));
+  if(!done.length) return null;
+  const lw=Math.max.apply(null, done.map(st=>parseFloat(st.w)));
+  if(!isFinite(lw)||lw<=0) return null;
+  const maxed=done.every(st=>{ const r=parseInt(st.r,10); return !isNaN(r)&&r>=rr.hi; });
+  const kg=data.unit==='kg', inc=rr.hi<=8?(kg?2.5:5):(kg?1.25:2.5);
+  if(maxed) return {w:fmtWt(lw+inc), lo:rr.lo, hi:rr.hi, up:true};
+  return {w:fmtWt(lw), lo:rr.lo, hi:rr.hi, up:false};
+}
 function viewLift(){
   const sp=curSplit(); const rp=getRot();
   if(state.liftDay>=sp.length||state.liftDay<0) state.liftDay=rp;
@@ -909,9 +935,10 @@ function viewLift(){
       const saved=s.sets[ex.n]||[];
       const last=lastFor(ex.n);
       const ls=lastSets(ex.n);
+      const sg=suggestWeight(ex);
       let rows='';
       for(let i=0;i<ex.s;i++){ const st=saved[i]||{};
-        const pw=(ls&&ls[i]&&ls[i].w)?ls[i].w:data.unit;
+        const pw=sg?sg.w:((ls&&ls[i]&&ls[i].w)?ls[i].w:data.unit);
         const pr=(ls&&ls[i]&&ls[i].r)?ls[i].r:'reps';
         rows+=`<div class="setrow"><span class="setno">${i+1}</span>
           <input inputmode="decimal" placeholder="${pw}" value="${st.w||''}" data-in="setw" data-ex="${enc(ex.n)}" data-i="${i}">
@@ -920,7 +947,7 @@ function viewLift(){
           <div class="chk ${st.done?'on':''}" data-act="setdone" data-ex="${enc(ex.n)}" data-i="${i}">✓</div></div>`;
       }
       out+=`<div class="ex ${ex.p?'pri':''}"><div class="ex-h"><div><div class="nm">${ex.n}</div>
-        <div class="tg">${ex.s} × ${ex.r}${ex.rir?` · ${ex.rir} RIR`:''}${ex.int?` <span class="int-badge" title="on the final set">+${ex.int}</span>`:''}</div>${last?`<div class="last">${last}</div>`:''}</div>
+        <div class="tg">${ex.s} × ${ex.r}${ex.rir?` · ${ex.rir} RIR`:''}${ex.int?` <span class="int-badge" title="on the final set">+${ex.int}</span>`:''}</div>${sg?`<div class="sugg ${sg.up?'up':''}" data-act="usesuggest" data-ex="${enc(ex.n)}" data-w="${sg.w}">${sg.up?'▲ Progress to':'↻ Repeat'} <b>${sg.w} ${data.unit}</b>${sg.up?` · start at ${sg.lo}`:` · beat last`}<span class="use">Use</span></div>`:(last?`<div class="last">${last}</div>`:'')}</div>
         ${ex.p?'<span class="pill">PRIORITY</span>':''}</div><div class="sets">${rows}</div></div>`;
     });
   });
@@ -1314,6 +1341,9 @@ document.addEventListener('click', e=>{
   else if(a==='startlift'){ state.tab='lift'; state.liftDay=+el.dataset.i; render(); }
   else if(a==='pickday'){ state.liftDay=+el.dataset.i; render(); }
   else if(a==='finishday'){ const sp=curSplit(); const ni=((+el.dataset.i)+1)%sp.length; setRot(ni); state.liftDay=ni; touchSettings(); save(); state.tab='today'; render(); showToast('Workout done 💪 Next up: '+sp[ni].tag); }
+  else if(a==='usesuggest'){ const ex=dec(el.dataset.ex), w=el.dataset.w; const s=dstore(); const arr=s.sets[ex]||(s.sets[ex]=[]);
+    let n=0; document.querySelectorAll('input[data-in="setw"]').forEach(inp=>{ if(dec(inp.dataset.ex)===ex&&!inp.value){ const i=+inp.dataset.i; inp.value=w; arr[i]=arr[i]||{}; arr[i].w=w; n++; } });
+    if(n){ touch(); save(); showToast('Filled '+w+' '+data.unit); } else showToast('Sets already filled'); }
   else if(a==='setdone'){ const ex=dec(el.dataset.ex),i=+el.dataset.i; const s=dstore(); const arr=s.sets[ex]||(s.sets[ex]=[]); arr[i]=arr[i]||{}; arr[i].done=!arr[i].done;
     if(arr[i].done&&(!arr[i].w||!arr[i].r)){ const ls=lastSets(ex); if(ls&&ls[i]){ if(!arr[i].w&&ls[i].w) arr[i].w=ls[i].w; if(!arr[i].r&&ls[i].r) arr[i].r=ls[i].r;
       const row=el.closest('.setrow'); if(row){ const ins=row.querySelectorAll('input'); if(ins[0]&&!ins[0].value) ins[0].value=arr[i].w||''; if(ins[1]&&!ins[1].value) ins[1].value=arr[i].r||''; } } }
